@@ -1,0 +1,91 @@
+# Issues Helper: 라벨 없음 시 댓글 안내 → 라벨 달리면 해당 댓글 삭제 후 환영 댓글
+# https://github.com/marketplace/actions/issues-helper
+name: Issue Helper
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  # 이슈 생성 시
+  on-opened:
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      # 라벨 없을 때만 — 라벨 붙여 달라는 댓글 (나중에 찾기 위해 마커 포함)
+      - name: Remind to add label when none
+        if: github.event.issue.labels == fromJSON('[]')
+        uses: actions-cool/issues-helper@v3
+        with:
+          actions: 'create-comment'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            ⚠️ 이 이슈에는 아직 **라벨이 없습니다.**  
+            이슈 유형에 맞는 라벨을 붙여 주세요: `feat` / `fix` / `docs` / `refactor` / `chore`
+            <!-- reminder-no-label -->
+          emoji: 'eyes'
+
+      # 처음부터 라벨이 있으면 — 환영 댓글만
+      - name: Create welcome comment (had labels from start)
+        if: github.event.issue.labels != fromJSON('[]')
+        uses: actions-cool/issues-helper@v3
+        with:
+          actions: 'create-comment'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            안녕하세요 @${{ github.event.issue.user.login }}님, 이슈를 등록해 주셔서 감사합니다. 🙌
+
+            - **커밋·PR**: [커밋 컨벤션](https://github.com/GDG-on-Campus-KNU/winter-sprint-5.5st-team1-be/blob/main/.github/commit_convention.md)을 참고해 주세요.
+
+            감사합니다.
+          emoji: '+1'
+
+  # 라벨이 붙었을 때 — 안내 댓글 삭제 후 환영 댓글
+  on-labeled:
+    if: github.event_name == 'issues' && github.event.action == 'labeled'
+    runs-on: ubuntu-latest
+    steps:
+      # 우리가 단 "라벨 없음" 안내 댓글 찾기
+      - name: Find reminder comment
+        id: find_reminder
+        uses: actions-cool/issues-helper@v3
+        with:
+          actions: 'find-comments'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body-includes: 'reminder-no-label'
+
+      # 찾은 안내 댓글의 id 추출 (첫 번째만)
+      - name: Get reminder comment id
+        id: get_comment_id
+        if: steps.find_reminder.outputs.comments != '' && steps.find_reminder.outputs.comments != '[]'
+        run: |
+          comment_id=$(echo '${{ steps.find_reminder.outputs.comments }}' | jq -r '.[0].id')
+          echo "comment_id=$comment_id" >> $GITHUB_OUTPUT
+
+      # 찾은 안내 댓글 삭제 (있을 때만)
+      - name: Delete reminder comment
+        if: steps.get_comment_id.outputs.comment_id != ''
+        uses: actions-cool/issues-helper@v3
+        with:
+          actions: 'delete-comment'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          comment-id: ${{ steps.get_comment_id.outputs.comment_id }}
+
+      # 환영 댓글 달기 (안내 댓글이 있었을 때만 = 방금 라벨을 붙인 경우)
+      - name: Create welcome comment
+        if: steps.get_comment_id.outputs.comment_id != ''
+        uses: actions-cool/issues-helper@v3
+        with:
+          actions: 'create-comment'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            안녕하세요 @${{ github.event.issue.user.login }}님, 이슈를 등록해 주셔서 감사합니다. 🙌
+
+            - **커밋·PR**: [커밋 컨벤션](https://github.com/GDG-on-Campus-KNU/winter-sprint-5.5st-team1-be/blob/main/.github/commit_convention.md)을 참고해 주세요.
+
+            감사합니다.
+          emoji: '+1'
