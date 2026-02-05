@@ -6,10 +6,12 @@ services:
     container_name: team1-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: team1
-      MYSQL_USER: team1
-      MYSQL_PASSWORD: team1
+      # 아래 환경 변수들은 .env 또는 CI 환경에서 주입해야 합니다.
+      # 예시 값: root / team1 / team1 / team1
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
