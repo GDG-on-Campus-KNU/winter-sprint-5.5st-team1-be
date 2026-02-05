@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: team1-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: team1
+      MYSQL_USER: team1
+      MYSQL_PASSWORD: team1
+    ports:
+      - "3306:3306"
+    volumes:
+      # 2단계에서 이 디렉터리에 schema/data SQL 파일을 추가할 예정
+      - ./mysql/init:/docker-entrypoint-initdb.d
+      - mysql-data:/var/lib/mysql
+
+  app:
+    build: ./team1
+    container_name: team1-app
+    depends_on:
+      - mysql
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/team1?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: team1
+      SPRING_DATASOURCE_PASSWORD: team1
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql-data:
