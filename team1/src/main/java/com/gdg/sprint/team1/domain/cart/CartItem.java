@@ -1,4 +1,4 @@
-package com.gdg.sprint.team1.cart.domain;
+package com.gdg.sprint.team1.domain.cart;
 
 import java.time.LocalDateTime;
 

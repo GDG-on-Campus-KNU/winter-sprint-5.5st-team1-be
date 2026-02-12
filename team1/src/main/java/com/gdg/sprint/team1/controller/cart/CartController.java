@@ -1,4 +1,4 @@
-package com.gdg.sprint.team1.cart.controller;
+package com.gdg.sprint.team1.controller.cart;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,12 +11,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gdg.sprint.team1.cart.controller.dto.AddCartItemRequest;
-import com.gdg.sprint.team1.cart.controller.dto.CartResponse;
-import com.gdg.sprint.team1.cart.controller.dto.CartSummary;
-import com.gdg.sprint.team1.cart.controller.dto.DeleteCartItemsRequest;
-import com.gdg.sprint.team1.cart.controller.dto.UpdateCartItemRequest;
-import com.gdg.sprint.team1.cart.service.CartService;
+import com.gdg.sprint.team1.dto.cart.AddCartItemRequest;
+import com.gdg.sprint.team1.dto.cart.CartResponse;
+import com.gdg.sprint.team1.dto.cart.CartSummary;
+import com.gdg.sprint.team1.dto.cart.DeleteCartItemsRequest;
+import com.gdg.sprint.team1.dto.cart.UpdateCartItemRequest;
+import com.gdg.sprint.team1.service.cart.CartService;
 
 @RestController
 @RequestMapping("/api/v1/cart")

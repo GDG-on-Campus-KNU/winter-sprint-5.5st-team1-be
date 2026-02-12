@@ -1,11 +1,11 @@
-package com.gdg.sprint.team1.cart.service;
+package com.gdg.sprint.team1.service.cart;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.gdg.sprint.team1.cart.domain.CartItem;
-import com.gdg.sprint.team1.cart.repository.CartItemRepository;
+import com.gdg.sprint.team1.domain.cart.CartItem;
+import com.gdg.sprint.team1.repository.CartItemRepository;
 
 @Service
 public class CartService {
