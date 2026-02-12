@@ -1,0 +1,30 @@
+name: Staging PR Build Check
+
+on:
+  pull_request:
+    branches:
+      - staging
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Grant execute permission for Gradle
+        run: chmod +x ./team1/gradlew || true
+
+      - name: Build with Gradle (clean build)
+        working-directory: ./team1
+        run: ./gradlew clean build --no-daemon
+
