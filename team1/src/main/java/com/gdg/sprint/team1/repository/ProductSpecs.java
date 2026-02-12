@@ -37,10 +37,14 @@ public final class ProductSpecs {
 
     public static Specification<Product> search(String keyword) {
         if (keyword == null || keyword.isBlank()) return (root, query, cb) -> cb.conjunction();
-        String pattern = "%" + keyword.trim() + "%";
+        String escaped = keyword.trim()
+            .replace("\\", "\\\\")
+            .replace("%", "\\%")
+            .replace("_", "\\_");
+        String pattern = "%" + escaped + "%";
         return (root, query, cb) -> cb.or(
-            cb.like(root.get("name"), pattern),
-            cb.like(root.get("description"), pattern)
+            cb.like(root.get("name"), pattern, '\\'),
+            cb.like(root.get("description"), pattern, '\\')
         );
     }
 }
