@@ -48,6 +48,9 @@ coverage/
 htmlcov/
 *.lcov
 
+# Cursor
+.cursorrules
+
 # Misc
 *.bak
 *.tmp
