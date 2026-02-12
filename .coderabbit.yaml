@@ -14,6 +14,10 @@ reviews:
   # PR 요약 생성
   high_level_summary: true
   
+  # 변경사항 요약 및 다이어그램(그래프) 생성
+  changed_files_summary: true
+  sequence_diagrams: true
+  
   # 시 형식 비활성화
   poem: false
   
@@ -62,3 +66,7 @@ path_filters:
 # 채팅 설정
 chat:
   auto_reply: true
+
+tone_instructions: > 
+  항상 한국어로 응답하고, 리뷰 코멘트와 요약, 제안 코드 모두
+  자연스럽고 공손한 한국어 문장으로 작성해 주세요.

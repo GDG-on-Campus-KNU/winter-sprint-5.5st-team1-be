@@ -1,23 +1,22 @@
 -- 초기 Mock 데이터
 -- 주의: MySQL 공식 이미지는 파일명을 알파벳 순으로 실행하므로
 -- 테이블 생성 스키마(schema.sql) 이후에 실행되도록 z- 접두어를 사용했습니다.
-
-USE team1;
-
+SET NAMES utf8mb4;
+use team1;
 -- 매장 2개
-INSERT INTO Stores (id, name, description)
+INSERT INTO stores (id, name, description)
 VALUES
     (1, '강남 카페', '스페셜티 커피와 디저트를 판매하는 카페'),
     (2, '홍대 피자샵', '수제 피자와 사이드를 판매하는 매장');
 
 -- 사용자 2명
-INSERT INTO Users (id, email, password, name, phone, address)
+INSERT INTO users (id, email, password, name, phone, address)
 VALUES
     (1, 'alice@example.com', 'password123', 'Alice', '010-1111-2222', '서울특별시 강남구 테헤란로 123'),
     (2, 'bob@example.com',   'password123', 'Bob',   '010-3333-4444', '서울특별시 마포구 와우산로 45');
 
 -- 상품 10개 이상 (강남 카페 6개, 홍대 피자샵 6개)
-INSERT INTO Products (id, store_id, name, description, price, stock, product_status)
+INSERT INTO products (id, store_id, name, description, price, stock, product_status)
 VALUES
     (1, 1, '아메리카노',        '진한 에스프레소와 깔끔한 맛의 커피',                 4500, 100, 'ACTIVE'),
     (2, 1, '카페라테',          '우유가 들어간 부드러운 커피',                       5000, 80,  'ACTIVE'),
@@ -34,20 +33,20 @@ VALUES
     (12, 2, '콜라 500ml',       '탄산음료 콜라 500ml',                              2000,  150,'ACTIVE');
 
 -- 쿠폰 2개 (정률, 정액)
-INSERT INTO Coupons (id, name, min_order_price, coupon_type, discount_value, description, coupon_status, valid_days)
+INSERT INTO coupons (id, name, min_order_price, coupon_type, discount_value, description, coupon_status, valid_days)
 VALUES
     (1, '10% 할인 쿠폰', 10000, 'PERCENTAGE', 10.00, '주문 금액의 10% 할인', 'ACTIVE', 30),
     (2, '2,000원 할인 쿠폰', 8000, 'FIXED', 2000.00, '주문 금액에서 2,000원 할인', 'ACTIVE', 30);
 
 -- 사용자 보유 쿠폰
-INSERT INTO UserCoupons (id, coupon_id, user_id, issued_at, used_at, expired_at)
+INSERT INTO user_coupons (id, coupon_id, user_id, issued_at, used_at, expired_at)
 VALUES
     (1, 1, 1, NOW() - INTERVAL 5 DAY,  NULL,                      NOW() + INTERVAL 25 DAY),
     (2, 2, 1, NOW() - INTERVAL 10 DAY, NOW() - INTERVAL 1 DAY,   NOW() + INTERVAL 20 DAY),
     (3, 2, 2, NOW() - INTERVAL 3 DAY,  NULL,                      NOW() + INTERVAL 27 DAY);
 
 -- 장바구니 예시 데이터
-INSERT INTO CartItems (product_id, user_id, quantity, created_at, updated_at)
+INSERT INTO cart_items (product_id, user_id, quantity, created_at, updated_at)
 VALUES
     (1, 1, 2, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 1 DAY),
     (5, 1, 1, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 1 DAY),
@@ -56,7 +55,7 @@ VALUES
 
 -- 주문 및 주문 아이템 예시
 -- recipient_name, recipient_phone, delivery_address, delivery_detail_address, delivery_message 컬럼 반영
-INSERT INTO Orders (id, user_id, user_coupon_id, total_product_price, discount_amount, delivery_fee, final_price,
+INSERT INTO orders (id, user_id, user_coupon_id, total_product_price, discount_amount, delivery_fee, final_price,
                     recipient_name, recipient_phone, delivery_address, delivery_detail_address, delivery_message,
                     order_status, created_at, updated_at)
 VALUES
@@ -89,7 +88,7 @@ VALUES
      NOW() - INTERVAL 2 DAY,
      NOW() - INTERVAL 2 DAY);
 
-INSERT INTO OrderItems (product_id, order_id, quantity, unit_price, created_at)
+INSERT INTO order_items (product_id, order_id, quantity, unit_price, created_at)
 VALUES
     -- 주문 1: Alice (카페)
     (1, 1, 2, 4500, NOW() - INTERVAL 1 DAY),
@@ -98,3 +97,4 @@ VALUES
     (8, 2, 1, 17000, NOW() - INTERVAL 2 DAY),
     (11,2, 2, 1500,  NOW() - INTERVAL 2 DAY),
     (12,2, 1, 2000,  NOW() - INTERVAL 2 DAY);
+
