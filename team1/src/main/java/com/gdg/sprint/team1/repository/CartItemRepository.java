@@ -20,6 +20,16 @@ public interface CartItemRepository extends JpaRepository<CartItem, CartItemId> 
     void deleteByIdUserIdAndIdProductId(Integer userId, Integer productId);
 
     @Modifying
+    @Query("""
+        update CartItem c
+        set c.quantity = c.quantity + :quantity
+        where c.id.userId = :userId and c.id.productId = :productId
+        """)
+    int incrementQuantity(@Param("userId") Integer userId,
+                          @Param("productId") Integer productId,
+                          @Param("quantity") Integer quantity);
+
+    @Modifying
     @Query("delete from CartItem c where c.id.userId = :userId and c.id.productId in :productIds")
     void deleteByUserIdAndProductIds(@Param("userId") Integer userId, @Param("productIds") List<Integer> productIds);
 

@@ -46,7 +46,12 @@ public class CartItem {
 
     public CartItemId getId() { return id; }
     public Integer getQuantity() { return quantity; }
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+    public void setQuantity(Integer quantity) {
+        if (quantity == null || quantity < 1) {
+            throw new IllegalArgumentException("quantity must be >= 1");
+        }
+        this.quantity = quantity;
+    }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

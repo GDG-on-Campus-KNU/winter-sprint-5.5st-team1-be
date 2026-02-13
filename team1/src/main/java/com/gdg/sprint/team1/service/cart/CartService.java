@@ -15,6 +15,7 @@ import com.gdg.sprint.team1.dto.cart.CartItemResponse;
 import com.gdg.sprint.team1.dto.cart.CartResponse;
 import com.gdg.sprint.team1.dto.cart.CartSummary;
 import com.gdg.sprint.team1.entity.Product;
+import com.gdg.sprint.team1.entity.Store;
 import com.gdg.sprint.team1.exception.ProductNotFoundException;
 import com.gdg.sprint.team1.repository.CartItemRepository;
 import com.gdg.sprint.team1.repository.ProductRepository;
@@ -57,6 +58,7 @@ public class CartService {
         Map<Long, Product> productMap = new HashMap<>();
         productRepository.findAllById(productIds)
             .forEach(product -> productMap.put(product.getId(), product));
+        Map<Long, Store> storeMap = loadStores(productMap);
 
         List<CartItemResponse> items = new ArrayList<>();
         int totalQuantity = 0;
@@ -65,7 +67,9 @@ public class CartService {
         for (CartItem item : cartItems) {
             Integer productId = item.getId().getProductId();
             Product product = productMap.get(productId.longValue());
-            BigDecimal productPrice = product != null ? product.getPrice() : BigDecimal.ZERO;
+            BigDecimal productPrice = product != null && product.getPrice() != null
+                ? product.getPrice()
+                : BigDecimal.ZERO;
             Integer quantity = item.getQuantity();
             BigDecimal subtotal = productPrice.multiply(BigDecimal.valueOf(quantity));
             boolean isAvailable = product != null
@@ -79,7 +83,7 @@ public class CartService {
                 productPrice,
                 product != null ? product.getProductStatus() : null,
                 product != null ? product.getStoreId() : null,
-                toStoreName(product),
+                toStoreName(product, storeMap),
                 quantity,
                 subtotal,
                 isAvailable,
@@ -108,11 +112,14 @@ public class CartService {
         productRepository.findById(productId.longValue())
             .orElseThrow(() -> new ProductNotFoundException(productId.longValue()));
 
-        cartItemRepository.findByIdUserIdAndIdProductId(userId, productId)
-            .ifPresentOrElse(
-                item -> item.setQuantity(item.getQuantity() + quantity),
-                () -> cartItemRepository.save(new CartItem(userId, productId, quantity))
-            );
+        int updated = cartItemRepository.incrementQuantity(userId, productId, quantity);
+        if (updated == 0) {
+            try {
+                cartItemRepository.save(new CartItem(userId, productId, quantity));
+            } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+                cartItemRepository.incrementQuantity(userId, productId, quantity);
+            }
+        }
     }
 
     @Transactional
@@ -156,11 +163,25 @@ public class CartService {
     }
 
     private String toStoreName(Product product) {
+        return toStoreName(product, Map.of());
+    }
+
+    private String toStoreName(Product product, Map<Long, Store> storeMap) {
         if (product == null) return null;
         if (product.getStore() != null) return product.getStore().getName();
         if (product.getStoreId() == null) return null;
-        return storeRepository.findById(product.getStoreId())
-            .map(store -> store.getName())
-            .orElse(null);
+        Store store = storeMap.get(product.getStoreId());
+        return store != null ? store.getName() : null;
+    }
+
+    private Map<Long, Store> loadStores(Map<Long, Product> productMap) {
+        List<Long> storeIds = productMap.values().stream()
+            .map(Product::getStoreId)
+            .filter(id -> id != null)
+            .distinct()
+            .collect(Collectors.toList());
+        if (storeIds.isEmpty()) return Map.of();
+        return storeRepository.findAllById(storeIds).stream()
+            .collect(Collectors.toMap(Store::getId, store -> store));
     }
 }
