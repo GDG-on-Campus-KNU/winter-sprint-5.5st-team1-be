@@ -130,7 +130,7 @@ public class CartService {
     public void updateQuantity(Integer userId, Integer productId, Integer quantity) {
         cartItemRepository.findByIdUserIdAndIdProductId(userId, productId)
             .ifPresent(item -> {
-                if (quantity <= 0) {
+                if (quantity == null || quantity <= 0) {
                     cartItemRepository.deleteByIdUserIdAndIdProductId(userId, productId);
                 } else {
                     item.setQuantity(quantity);
