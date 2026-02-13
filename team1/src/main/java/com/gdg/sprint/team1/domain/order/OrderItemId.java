@@ -9,7 +9,7 @@ import jakarta.persistence.Embeddable;
 public class OrderItemId implements Serializable {
 
     private Integer orderId;
-    private Long productId; // ✅ Integer → Long 변경
+    private Long productId;
 
     protected OrderItemId() {}
 
