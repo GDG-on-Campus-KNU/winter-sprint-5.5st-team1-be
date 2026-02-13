@@ -119,6 +119,7 @@ CREATE TABLE orders (
     delivery_detail_address VARCHAR(255),                -- 상세주소 (선택)
     delivery_message VARCHAR(500),                       -- 배송 메시지 (선택)
     order_status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    cancel_reason VARCHAR(500) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     -- 유저 삭제 시 해당 유저의 주문 이력은 보존해야 하므로 유저 삭제를 제한

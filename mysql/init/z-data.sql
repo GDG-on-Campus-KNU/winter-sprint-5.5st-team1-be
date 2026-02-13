@@ -57,36 +57,10 @@ VALUES
 -- recipient_name, recipient_phone, delivery_address, delivery_detail_address, delivery_message 컬럼 반영
 INSERT INTO orders (id, user_id, user_coupon_id, total_product_price, discount_amount, delivery_fee, final_price,
                     recipient_name, recipient_phone, delivery_address, delivery_detail_address, delivery_message,
-                    order_status, created_at, updated_at)
+                    order_status, cancel_reason, created_at, updated_at) -- cancel_reason 추가
 VALUES
-    -- Alice가 카페에서 주문한 예시
-    (1, 1, 2,
-     4500 * 2 + 6500,
-     2000,
-     0,
-     4500 * 2 + 6500 - 2000,
-     'Alice',
-     '010-1111-2222',
-     '서울특별시 강남구 테헤란로 123',
-     '456호',
-     '문 앞에 놓아주세요.',
-     'COMPLETED',
-     NOW() - INTERVAL 1 DAY,
-     NOW() - INTERVAL 1 DAY),
-    -- Bob이 피자샵에서 주문한 예시 (쿠폰 미사용, 상세주소/배송메시지 없음)
-    (2, 2, NULL,
-     17000 + 1500 * 2 + 2000,
-     0,
-     3000,
-     17000 + 1500 * 2 + 2000 + 3000,
-     'Bob',
-     '010-3333-4444',
-     '서울특별시 마포구 와우산로 45',
-     NULL,
-     NULL,
-     'COMPLETED',
-     NOW() - INTERVAL 2 DAY,
-     NOW() - INTERVAL 2 DAY);
+    (1, 1, 2, 15500.00, 2000.00, 0, 13500.00, 'Alice', '010-1111-2222', '주소', '상세주소', '메시지', 'PENDING', NULL, NOW(), NOW()),
+    (2, 2, NULL, 22000.00, 0, 3000.00, 25000.00, 'Bob', '010-3333-4444', '주소', NULL, NULL, 'DELIVERED', NULL, NOW(), NOW());
 
 INSERT INTO order_items (product_id, order_id, quantity, unit_price, created_at)
 VALUES
