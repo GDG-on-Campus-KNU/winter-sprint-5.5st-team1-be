@@ -38,8 +38,9 @@ public class Coupon {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "coupon_status", nullable = false, length = 50)
-    private String couponStatus = "ACTIVE";
+    @Enumerated(EnumType.STRING)
+    @Column(name = "coupon_status", nullable = false, length = 20)
+    private CouponStatus couponStatus = CouponStatus.ACTIVE;
 
     @Column(name = "valid_days", nullable = false)
     private Integer validDays = 30;
@@ -68,6 +69,11 @@ public class Coupon {
         PERCENTAGE, FIXED
     }
 
+    public enum CouponStatus {
+        ACTIVE,
+        INACTIVE
+    }
+
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
     public String getName() { return name; }
@@ -80,8 +86,8 @@ public class Coupon {
     public void setDiscountValue(BigDecimal discountValue) { this.discountValue = discountValue; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    public String getCouponStatus() { return couponStatus; }
-    public void setCouponStatus(String couponStatus) { this.couponStatus = couponStatus; }
+    public CouponStatus getCouponStatus() { return couponStatus; }
+    public void setCouponStatus(CouponStatus couponStatus) { this.couponStatus = couponStatus; }
     public Integer getValidDays() { return validDays; }
     public void setValidDays(Integer validDays) { this.validDays = validDays; }
     public LocalDateTime getCreatedAt() { return createdAt; }
