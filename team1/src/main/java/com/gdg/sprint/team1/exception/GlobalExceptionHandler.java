@@ -1,9 +1,13 @@
 package com.gdg.sprint.team1.exception;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -11,6 +15,8 @@ import com.gdg.sprint.team1.common.ApiResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // ===== 상품 관련 예외 =====
 
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleProductNotFound(ProductNotFoundException ex) {
@@ -26,6 +32,142 @@ public class GlobalExceptionHandler {
             .body(ApiResponse.failure("STORE_NOT_FOUND", "존재하지 않는 상점입니다."));
     }
 
+    // ===== 사용자 관련 예외 =====
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUserNotFound(UserNotFoundException ex) {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ApiResponse.failure("USER_NOT_FOUND", "존재하지 않는 사용자입니다."));
+    }
+
+    // ===== 주문 관련 예외 =====
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOrderNotFound(OrderNotFoundException ex) {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ApiResponse.failure("ORDER_NOT_FOUND", "존재하지 않는 주문입니다."));
+    }
+
+    @ExceptionHandler(EmptyOrderException.class)
+    public ResponseEntity<ApiResponse<Void>> handleEmptyOrder(EmptyOrderException ex) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.failure("EMPTY_ORDER", ex.getMessage()));
+    }
+
+    @ExceptionHandler(UnauthorizedOrderAccessException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUnauthorizedOrderAccess(UnauthorizedOrderAccessException ex) {
+        return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(ApiResponse.failure("UNAUTHORIZED_ACCESS", ex.getMessage()));
+    }
+
+    /**
+     * 주문 취소 불가 예외 처리
+     * API 명세: CANNOT_CANCEL_ORDER (400)
+     */
+    @ExceptionHandler(CannotCancelOrderException.class)
+    public ResponseEntity<ApiResponse<Map<String, Object>>> handleCannotCancelOrder(CannotCancelOrderException ex) {
+        Map<String, Object> errorDetails = new HashMap<>();
+        errorDetails.put("message", ex.getMessage());
+        errorDetails.put("current_status", ex.getCurrentStatus().name());
+
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(new ApiResponse<>(
+                false,
+                null,
+                null,
+                new ApiResponse.ErrorDetail("CANNOT_CANCEL_ORDER", ex.getMessage()),
+                java.time.Instant.now().toString()
+            ));
+    }
+
+    /**
+     * 최소 주문 금액 미달 예외 처리
+     * API 명세: MINIMUM_ORDER_NOT_MET (400)
+     */
+    @ExceptionHandler(MinimumOrderNotMetException.class)
+    public ResponseEntity<ApiResponse<Map<String, Object>>> handleMinimumOrderNotMet(MinimumOrderNotMetException ex) {
+        Map<String, Object> details = new HashMap<>();
+        details.put("current_amount", ex.getCurrentAmount());
+        details.put("minimum_required", ex.getMinimumRequired());
+
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(new ApiResponse<>(
+                false,
+                null,
+                null,
+                new ApiResponse.ErrorDetail("MINIMUM_ORDER_NOT_MET", ex.getMessage()),
+                java.time.Instant.now().toString()
+            ));
+    }
+
+    // ===== 재고 관련 예외 =====
+
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInsufficientStock(InsufficientStockException ex) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.failure("OUT_OF_STOCK", ex.getMessage()));
+    }
+
+    // ===== 쿠폰 관련 예외 =====
+
+    @ExceptionHandler(CouponNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleCouponNotFound(CouponNotFoundException ex) {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ApiResponse.failure("COUPON_NOT_FOUND", "존재하지 않는 쿠폰입니다."));
+    }
+
+    @ExceptionHandler(InvalidCouponException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidCoupon(InvalidCouponException ex) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.failure("INVALID_COUPON", ex.getMessage()));
+    }
+
+    // ===== 장바구니 관련 예외 =====
+
+    @ExceptionHandler(EmptyCartException.class)
+    public ResponseEntity<ApiResponse<Void>> handleEmptyCart(EmptyCartException ex) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.failure("EMPTY_CART", ex.getMessage()));
+    }
+
+    /**
+     * 이미 장바구니에 있는 상품 예외 처리
+     * API 명세: ALREADY_IN_CART (409)
+     *
+     * 주의: API 명세에는 409 Conflict로 명시되어 있으나,
+     * 실제로는 수량 증가 처리하고 200 OK로 응답하는 것을 권장합니다.
+     * 이 핸들러는 명세 준수를 위해 남겨둡니다.
+     */
+    @ExceptionHandler(AlreadyInCartException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAlreadyInCart(AlreadyInCartException ex) {
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(ApiResponse.failure("ALREADY_IN_CART", ex.getMessage()));
+    }
+
+    /**
+     * 장바구니에 상품이 없음 예외 처리
+     * API 명세: CART_ITEM_NOT_FOUND (404)
+     */
+    @ExceptionHandler(CartItemNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleCartItemNotFound(CartItemNotFoundException ex) {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ApiResponse.failure("CART_ITEM_NOT_FOUND", ex.getMessage()));
+    }
+
+    // ===== 공통 예외 =====
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
         FieldError fieldError = ex.getBindingResult().getFieldError();
@@ -35,5 +177,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(ApiResponse.failure("INVALID_REQUEST", message));
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingHeader(MissingRequestHeaderException ex) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.failure("MISSING_HEADER", ex.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.failure("INVALID_ARGUMENT", ex.getMessage()));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
+        ex.printStackTrace(); // 로그에 출력 (실제로는 로깅 프레임워크 사용 권장)
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ApiResponse.failure("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
     }
 }
