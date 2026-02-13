@@ -1,9 +1,11 @@
 package com.gdg.sprint.team1.dto.cart;
 
+import java.math.BigDecimal;
+
 public record CartSummary (
         Integer totalItems,
         Integer totalQuantity,
-        Integer totalProductPrice,
-        Integer deliveryFee,
-        Integer finalPrice
+        BigDecimal totalProductPrice,
+        BigDecimal deliveryFee,
+        BigDecimal finalPrice
 ) {}

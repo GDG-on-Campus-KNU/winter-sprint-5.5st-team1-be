@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.dto.cart.AddCartItemRequest;
 import com.gdg.sprint.team1.dto.cart.CartResponse;
 import com.gdg.sprint.team1.dto.cart.DeleteCartItemsRequest;
@@ -29,48 +30,48 @@ public class CartController {
     }
 
     @GetMapping
-    public ResponseEntity<CartResponse> getCart(
+    public ResponseEntity<ApiResponse<CartResponse>> getCart(
             @RequestHeader("X-USER-ID") Integer userId
     ) {
-        return ResponseEntity.ok(cartService.getCart(userId));
+        return ResponseEntity.ok(ApiResponse.success(cartService.getCart(userId), "장바구니 조회 성공"));
     }
 
     @PostMapping
-    public ResponseEntity<Void> addItem(
+    public ResponseEntity<ApiResponse<Void>> addItem(
             @RequestHeader("X-USER-ID") Integer userId,
             @Valid @RequestBody AddCartItemRequest request
     ) {
         cartService.addItem(userId, request.productId(), request.quantity());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success(null, "장바구니 담기 성공"));
     }
 
     @PatchMapping("/items/{product_id}")
-    public ResponseEntity<Void> updateQuantity(
+    public ResponseEntity<ApiResponse<Void>> updateQuantity(
             @RequestHeader("X-USER-ID") Integer userId,
             @PathVariable("product_id") Integer productId,
             @Valid @RequestBody UpdateCartItemRequest request
     ) {
         cartService.updateQuantity(userId, productId, request.quantity());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success(null, "장바구니 수량 변경 성공"));
     }
 
     // 선택 삭제
     @DeleteMapping("/items")
-    public ResponseEntity<Void> deleteSelected(
+    public ResponseEntity<ApiResponse<Void>> deleteSelected(
             @RequestHeader("X-USER-ID") Integer userId,
             @Valid @RequestBody DeleteCartItemsRequest request
     ) {
         cartService.deleteSelected(userId, request.itemIds());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success(null, "장바구니 선택 삭제 성공"));
     }
 
     // 전체 삭제
     @DeleteMapping
-    public ResponseEntity<Void> deleteAll(
+    public ResponseEntity<ApiResponse<Void>> deleteAll(
             @RequestHeader("X-USER-ID") Integer userId
     ) {
         cartService.deleteAll(userId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success(null, "장바구니 전체 삭제 성공"));
     }
 
 }

@@ -18,23 +18,34 @@ import com.gdg.sprint.team1.entity.Product;
 import com.gdg.sprint.team1.exception.ProductNotFoundException;
 import com.gdg.sprint.team1.repository.CartItemRepository;
 import com.gdg.sprint.team1.repository.ProductRepository;
+import com.gdg.sprint.team1.repository.StoreRepository;
 
 @Service
 public class CartService {
 
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
+    private final StoreRepository storeRepository;
 
-    public CartService(CartItemRepository cartItemRepository, ProductRepository productRepository) {
+    public CartService(CartItemRepository cartItemRepository,
+                       ProductRepository productRepository,
+                       StoreRepository storeRepository) {
         this.cartItemRepository = cartItemRepository;
         this.productRepository = productRepository;
+        this.storeRepository = storeRepository;
     }
 
     @Transactional(readOnly = true)
     public CartResponse getCart(Integer userId) {
         List<CartItem> cartItems = cartItemRepository.findAllByIdUserId(userId);
         if (cartItems.isEmpty()) {
-            CartSummary summary = new CartSummary(0, 0, 0, 0, 0);
+            CartSummary summary = new CartSummary(
+                0,
+                0,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO
+            );
             return new CartResponse(userId, List.of(), summary);
         }
 
@@ -49,14 +60,14 @@ public class CartService {
 
         List<CartItemResponse> items = new ArrayList<>();
         int totalQuantity = 0;
-        int totalProductPrice = 0;
+        BigDecimal totalProductPrice = BigDecimal.ZERO;
 
         for (CartItem item : cartItems) {
             Integer productId = item.getId().getProductId();
             Product product = productMap.get(productId.longValue());
-            Integer unitPrice = product != null ? toIntPrice(product.getPrice()) : 0;
+            BigDecimal productPrice = product != null ? product.getPrice() : BigDecimal.ZERO;
             Integer quantity = item.getQuantity();
-            Integer subtotal = unitPrice * quantity;
+            BigDecimal subtotal = productPrice.multiply(BigDecimal.valueOf(quantity));
             boolean isAvailable = product != null
                 && "ACTIVE".equals(product.getProductStatus())
                 && product.getStock() != null
@@ -64,8 +75,12 @@ public class CartService {
 
             items.add(new CartItemResponse(
                 productId,
+                product != null ? product.getName() : null,
+                productPrice,
+                product != null ? product.getProductStatus() : null,
+                product != null ? product.getStoreId() : null,
+                toStoreName(product),
                 quantity,
-                unitPrice,
                 subtotal,
                 isAvailable,
                 item.getCreatedAt(),
@@ -73,16 +88,16 @@ public class CartService {
             ));
 
             totalQuantity += quantity;
-            totalProductPrice += subtotal;
+            totalProductPrice = totalProductPrice.add(subtotal);
         }
 
-        int deliveryFee = calculateDeliveryFee(totalProductPrice);
+        BigDecimal deliveryFee = calculateDeliveryFee(totalProductPrice);
         CartSummary summary = new CartSummary(
             items.size(),
             totalQuantity,
             totalProductPrice,
             deliveryFee,
-            totalProductPrice + deliveryFee
+            totalProductPrice.add(deliveryFee)
         );
 
         return new CartResponse(userId, items, summary);
@@ -126,12 +141,21 @@ public class CartService {
         }
     }
 
-    public int calculateDeliveryFee(int totalProductPrice) {
-        if (totalProductPrice == 0) return 0;
-        return totalProductPrice >= 30000 ? 0 : 3000;
+    public BigDecimal calculateDeliveryFee(BigDecimal totalProductPrice) {
+        if (totalProductPrice == null || totalProductPrice.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return totalProductPrice.compareTo(BigDecimal.valueOf(30000)) >= 0
+            ? BigDecimal.ZERO
+            : BigDecimal.valueOf(3000);
     }
 
-    private int toIntPrice(BigDecimal price) {
-        return price == null ? 0 : price.intValue();
+    private String toStoreName(Product product) {
+        if (product == null) return null;
+        if (product.getStore() != null) return product.getStore().getName();
+        if (product.getStoreId() == null) return null;
+        return storeRepository.findById(product.getStoreId())
+            .map(store -> store.getName())
+            .orElse(null);
     }
 }
