@@ -383,10 +383,16 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<OrderResponse>>> getOrders(
         @Parameter(hidden = true) @RequestHeader(value = "X-USER-ID") Integer userId,
-        @RequestParam(required = false) Integer page,
-        @RequestParam(required = false) Integer limit,
-        @RequestParam(required = false) String status) {
 
+        @Parameter(description = "페이지 번호 (기본값: 1)", example = "1")
+        @RequestParam(required = false, defaultValue = "1") Integer page,  // ← 기본값 1
+
+        @Parameter(description = "페이지당 항목 수 (기본값: 10)", example = "10")
+        @RequestParam(required = false, defaultValue = "10") Integer limit,  // ← 기본값 10
+
+        @Parameter(description = "주문 상태 필터", example = "PENDING")
+        @RequestParam(required = false) String status
+    ) {
         Page<OrderResponse> response = orderService.getOrders(userId, page, limit, status);
         return ResponseEntity.ok(ApiResponse.success(response, "주문 목록 조회 성공"));
     }
