@@ -71,7 +71,7 @@ public class CartService {
             boolean isAvailable = product != null
                 && "ACTIVE".equals(product.getProductStatus())
                 && product.getStock() != null
-                && product.getStock() > 0;
+                && product.getStock() >= quantity;
 
             items.add(new CartItemResponse(
                 productId,
@@ -105,6 +105,10 @@ public class CartService {
 
     @Transactional
     public void addItem(Integer userId, Integer productId, Integer quantity) {
+        if (quantity == null || quantity < 1) {
+            throw new IllegalArgumentException("quantity must be >= 1");
+        }
+
         productRepository.findById(productId.longValue())
             .orElseThrow(() -> new ProductNotFoundException(productId.longValue()));
 
