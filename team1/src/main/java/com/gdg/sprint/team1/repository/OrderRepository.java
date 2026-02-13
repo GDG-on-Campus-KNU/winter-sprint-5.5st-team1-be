@@ -17,6 +17,6 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     Page<Order> findAllByUserIdAndOrderStatus(Integer userId, OrderStatus orderStatus, Pageable pageable);
 
-    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.orderItems LEFT JOIN FETCH o.userCoupon uc LEFT JOIN FETCH uc.coupon WHERE o.id = :orderId")
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderItems LEFT JOIN FETCH o.userCoupon uc LEFT JOIN FETCH uc.coupon WHERE o.id = :orderId")
     Optional<Order> findByIdWithDetails(@Param("orderId") Integer orderId);
 }
