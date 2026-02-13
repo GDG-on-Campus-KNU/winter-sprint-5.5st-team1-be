@@ -7,17 +7,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.gdg.sprint.team1.domain.cart.CartItem;
 import com.gdg.sprint.team1.dto.order.CancelOrderResponse;
 import com.gdg.sprint.team1.dto.order.CreateOrderFromCartRequest;
 import com.gdg.sprint.team1.dto.order.CreateOrderRequest;
+import com.gdg.sprint.team1.dto.order.CreateOrderRequest.OrderItemRequest;
 import com.gdg.sprint.team1.dto.order.CreateOrderResponse;
 import com.gdg.sprint.team1.dto.order.OrderDetailResponse;
 import com.gdg.sprint.team1.dto.order.OrderResponse;
@@ -50,8 +52,18 @@ import com.gdg.sprint.team1.service.pricing.PriceCalculationResult;
 import com.gdg.sprint.team1.service.pricing.PriceCalculationService;
 import com.gdg.sprint.team1.service.pricing.PriceItem;
 
+/**
+ * 주문 서비스
+ *
+ * 동시성 제어: Optimistic Lock (@Version)
+ * - Product 엔티티에 version 필드 추가 필요
+ * - 동시 주문 시 자동으로 충돌 감지 및 예외 발생
+ * - 클라이언트에서 재시도 처리 권장
+ */
 @Service
 public class OrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
@@ -76,9 +88,16 @@ public class OrderService {
 
     /**
      * 주문 생성 (직접 상품 목록 입력)
+     *
+     * 동시성 제어:
+     * - Product의 @Version 필드를 통한 Optimistic Lock
+     * - 재고 차감 시 version 불일치 발생 시 ObjectOptimisticLockingFailureException 발생
+     * - 클라이언트에서 에러 처리 및 재시도 필요
      */
     @Transactional
     public CreateOrderResponse createOrder(Integer userId, CreateOrderRequest request) {
+        log.debug("주문 생성 시작: userId={}", userId);
+
         // 1. 사용자 조회
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new UserNotFoundException(userId));
@@ -90,8 +109,8 @@ public class OrderService {
 
         // 3. 상품 조회 및 재고 확인
         List<Integer> productIds = request.items().stream()
-            .map(item -> item.productId())
-            .collect(Collectors.toList());
+            .map(OrderItemRequest::productId)
+            .toList();
 
         Map<Integer, Product> productMap = new HashMap<>();
         productRepository.findAllById(productIds.stream()
@@ -182,7 +201,8 @@ public class OrderService {
             OrderItem orderItem = new OrderItem(order, product, item.quantity(), product.getPrice());
             order.addOrderItem(orderItem);
 
-            // 재고 차감
+            // 재고 차감 (Optimistic Lock으로 동시성 제어)
+            // Product의 @Version 필드가 자동으로 증가하며 충돌 감지
             product.setStock(product.getStock() - item.quantity());
         }
 
@@ -191,14 +211,21 @@ public class OrderService {
             userCoupon.use();
         }
 
+        log.info("주문 생성 완료: orderId={}, userId={}, finalPrice={}",
+            order.getId(), userId, order.getFinalPrice());
+
         return CreateOrderResponse.from(order);
     }
 
     /**
      * 장바구니 기반 주문 생성
+     *
+     * 동시성 제어: Optimistic Lock 적용
      */
     @Transactional
     public CreateOrderResponse createOrderFromCart(Integer userId, CreateOrderFromCartRequest request) {
+        log.debug("장바구니 기반 주문 생성 시작: userId={}", userId);
+
         // 1. 사용자 조회
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new UserNotFoundException(userId));
@@ -259,7 +286,7 @@ public class OrderService {
 
             Coupon coupon = userCoupon.getCoupon();
 
-            // ✅ 최소 주문 금액 체크
+            // 최소 주문 금액 체크
             BigDecimal totalProductPrice = priceItems.stream()
                 .map(item -> item.unitPrice().multiply(BigDecimal.valueOf(item.quantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -303,7 +330,7 @@ public class OrderService {
             OrderItem orderItem = new OrderItem(order, product, cartItem.getQuantity(), product.getPrice());
             order.addOrderItem(orderItem);
 
-            // 재고 차감
+            // 재고 차감 (Optimistic Lock으로 동시성 제어)
             product.setStock(product.getStock() - cartItem.getQuantity());
         }
 
@@ -313,20 +340,16 @@ public class OrderService {
         }
 
         // 10. 장바구니 비우기
-        cartItemRepository.deleteByUserIdAndProductIds(
-            userId,
-            productIds
-        );
+        cartItemRepository.deleteByUserIdAndProductIds(userId, productIds);
+
+        log.info("장바구니 기반 주문 생성 완료: orderId={}, userId={}, finalPrice={}",
+            order.getId(), userId, order.getFinalPrice());
 
         return CreateOrderResponse.from(order);
     }
 
     /**
      * 주문 목록 조회
-     * Propagation.SUPPORTS 제거:
-     * - SUPPORTS를 사용하면 트랜잭션이 없을 때 LazyInitializationException 발생
-     * - OrderResponse.from()에서 order.getOrderItems().size() 호출 시 에러
-     * - readOnly = true만 사용하여 안전하게 처리
      */
     @Transactional(readOnly = true)
     public Page<OrderResponse> getOrders(Integer userId, Integer page, Integer limit, String status) {
@@ -348,6 +371,7 @@ public class OrderService {
                 OrderStatus orderStatus = OrderStatus.valueOf(status.toUpperCase());
                 orderPage = orderRepository.findAllByUserIdAndOrderStatus(userId, orderStatus, pageable);
             } catch (IllegalArgumentException e) {
+                log.warn("유효하지 않은 주문 상태: {}, 전체 조회로 대체", status);
                 orderPage = orderRepository.findAllByUserId(userId, pageable);
             }
         } else {
@@ -359,18 +383,17 @@ public class OrderService {
 
     /**
      * 주문 상세 조회
-     * Propagation.SUPPORTS 제거:
-     * - findByIdWithDetails()가 JOIN FETCH를 사용하더라도
-     * - 트랜잭션 없이 실행되면 예상치 못한 에러 발생 가능
-     * - readOnly = true로 안전하게 처리
      */
     @Transactional(readOnly = true)
     public OrderDetailResponse getOrderDetail(Integer userId, Integer orderId) {
+        log.debug("주문 상세 조회: userId={}, orderId={}", userId, orderId);
+
         Order order = orderRepository.findByIdWithDetails(orderId)
             .orElseThrow(() -> new OrderNotFoundException(orderId));
 
         // 본인의 주문만 조회 가능
         if (!order.getUser().getId().equals(userId)) {
+            log.warn("권한 없는 주문 조회 시도: userId={}, orderId={}", userId, orderId);
             throw new UnauthorizedOrderAccessException();
         }
 
@@ -390,18 +413,22 @@ public class OrderService {
      */
     @Transactional
     public CancelOrderResponse cancelOrder(Integer userId, Integer orderId, String cancelReason) {
+        log.debug("주문 취소 시작: userId={}, orderId={}", userId, orderId);
+
         // 1. 주문 조회 (JOIN FETCH로 OrderItem, UserCoupon 함께 조회)
         Order order = orderRepository.findByIdWithDetails(orderId)
             .orElseThrow(() -> new OrderNotFoundException(orderId));
 
         // 2. 본인 확인
         if (!order.getUser().getId().equals(userId)) {
+            log.warn("권한 없는 주문 취소 시도: userId={}, orderId={}", userId, orderId);
             throw new UnauthorizedOrderAccessException();
         }
 
         // 3. 취소 가능 상태 확인 (PENDING, CONFIRMED만 가능)
         OrderStatus currentStatus = order.getOrderStatus();
         if (currentStatus != OrderStatus.PENDING && currentStatus != OrderStatus.CONFIRMED) {
+            log.warn("취소 불가 상태: orderId={}, status={}", orderId, currentStatus);
             throw new CannotCancelOrderException(currentStatus);
         }
 
@@ -411,20 +438,23 @@ public class OrderService {
             Integer currentStock = product.getStock();
             Integer returnQuantity = orderItem.getQuantity();
             product.setStock(currentStock + returnQuantity);
-            // JPA 더티 체킹으로 자동 UPDATE
+            log.debug("재고 복구: productId={}, 복구량={}, 새 재고={}",
+                product.getId(), returnQuantity, product.getStock());
         }
 
         // 5. 쿠폰 복구
         UserCoupon userCoupon = order.getUserCoupon();
         if (userCoupon != null) {
-            userCoupon.setUsedAt(null); // 사용 취소
-            // JPA 더티 체킹으로 자동 UPDATE
+            userCoupon.setUsedAt(null);
+            log.debug("쿠폰 복구: userCouponId={}", userCoupon.getId());
         }
 
         // 6. 주문 상태 변경 및 취소 사유 저장
         order.setOrderStatus(OrderStatus.CANCELLED);
         order.setCancelReason(cancelReason);
-        // JPA 더티 체킹으로 자동 UPDATE (updated_at도 자동 업데이트)
+
+        log.info("주문 취소 완료: orderId={}, userId={}, 환불액={}",
+            orderId, userId, order.getFinalPrice());
 
         return CancelOrderResponse.from(order);
     }

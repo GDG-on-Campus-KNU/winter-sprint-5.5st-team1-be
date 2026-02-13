@@ -1,12 +1,10 @@
 package com.gdg.sprint.team1.exception;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
@@ -191,6 +189,29 @@ public class GlobalExceptionHandler {
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(ApiResponse.failure("INVALID_ARGUMENT", ex.getMessage()));
+    }
+
+    /**
+     * Optimistic Lock 충돌 (동시성 문제)
+     *
+     * 발생 상황:
+     * - 동시에 같은 상품의 재고를 차감할 때
+     * - Product의 version 필드 불일치
+     *
+     * 클라이언트 처리:
+     * - 재시도 (Retry) 권장
+     * - "주문이 몰려 처리가 지연되고 있습니다. 다시 시도해주세요" 안내
+     */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
+        log.warn("동시성 충돌 발생 (Optimistic Lock): {}", ex.getMessage());
+
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)  // 409 Conflict
+            .body(ApiResponse.failure(
+                "CONCURRENT_UPDATE_CONFLICT",
+                "동시에 여러 요청이 발생하여 처리할 수 없습니다. 잠시 후 다시 시도해주세요."
+            ));
     }
 
     @ExceptionHandler(Exception.class)
