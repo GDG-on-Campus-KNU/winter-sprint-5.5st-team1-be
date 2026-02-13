@@ -330,8 +330,11 @@ public class OrderService {
      */
     @Transactional(readOnly = true)
     public Page<OrderResponse> getOrders(Integer userId, Integer page, Integer limit, String status) {
+        // 페이지네이션 상한선 적용 (최대 100개)
         int safePage = page != null && page >= 1 ? page : 1;
-        int safeLimit = limit != null && limit >= 1 ? limit : 10;
+        int safeLimit = limit != null && limit >= 1 ? Math.min(limit, 100) : 10;
+
+        log.debug("주문 목록 조회: userId={}, page={}, limit={}", userId, safePage, safeLimit);
 
         PageRequest pageable = PageRequest.of(
             safePage - 1,
