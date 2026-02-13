@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.gdg.sprint.team1.dto.cart.AddCartItemRequest;
 import com.gdg.sprint.team1.dto.cart.CartResponse;
-import com.gdg.sprint.team1.dto.cart.CartSummary;
 import com.gdg.sprint.team1.dto.cart.DeleteCartItemsRequest;
 import com.gdg.sprint.team1.dto.cart.UpdateCartItemRequest;
 import com.gdg.sprint.team1.service.cart.CartService;
@@ -32,11 +31,7 @@ public class CartController {
     public ResponseEntity<CartResponse> getCart(
             @RequestHeader("X-USER-ID") Integer userId
     ) {
-        // TODO: cartService.getCart(userId)
-        return ResponseEntity.ok(
-                new CartResponse(userId, java.util.List.of(),
-                        new CartSummary(0, 0, 0, 0, 0))
-        );
+        return ResponseEntity.ok(cartService.getCart(userId));
     }
 
     @PostMapping
@@ -44,7 +39,7 @@ public class CartController {
             @RequestHeader("X-USER-ID") Integer userId,
             @RequestBody AddCartItemRequest request
     ) {
-        // TODO: cartService.addItem(userId, request.productId(), request.quantity())
+        cartService.addItem(userId, request.productId(), request.quantity());
         return ResponseEntity.ok().build();
     }
 
@@ -54,8 +49,7 @@ public class CartController {
             @PathVariable("product_id") Integer productId,
             @RequestBody UpdateCartItemRequest request
     ) {
-        // TODO: cartService.updateQuantity(userId, productId, request.quantity())
-        // if quantity <= 0 => delete
+        cartService.updateQuantity(userId, productId, request.quantity());
         return ResponseEntity.ok().build();
     }
 
@@ -65,7 +59,7 @@ public class CartController {
             @RequestHeader("X-USER-ID") Integer userId,
             @RequestBody DeleteCartItemsRequest request
     ) {
-        // TODO: cartService.deleteSelected(userId, request.itemIds())
+        cartService.deleteSelected(userId, request.itemIds());
         return ResponseEntity.ok().build();
     }
 
@@ -74,7 +68,7 @@ public class CartController {
     public ResponseEntity<Void> deleteAll(
             @RequestHeader("X-USER-ID") Integer userId
     ) {
-        // TODO: cartService.deleteAll(userId)
+        cartService.deleteAll(userId);
         return ResponseEntity.ok().build();
     }
 
