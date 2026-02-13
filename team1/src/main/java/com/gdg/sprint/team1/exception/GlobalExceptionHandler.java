@@ -3,6 +3,8 @@ package com.gdg.sprint.team1.exception;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -15,11 +17,13 @@ import com.gdg.sprint.team1.common.ApiResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // ===== 상품 관련 예외 =====
 
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleProductNotFound(ProductNotFoundException ex) {
+        log.warn("상품을 찾을 수 없음: {}", ex.getMessage());
         return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .body(ApiResponse.failure("PRODUCT_NOT_FOUND", "존재하지 않는 상품입니다."));
@@ -69,20 +73,16 @@ public class GlobalExceptionHandler {
      * API 명세: CANNOT_CANCEL_ORDER (400)
      */
     @ExceptionHandler(CannotCancelOrderException.class)
-    public ResponseEntity<ApiResponse<Map<String, Object>>> handleCannotCancelOrder(CannotCancelOrderException ex) {
-        Map<String, Object> errorDetails = new HashMap<>();
-        errorDetails.put("message", ex.getMessage());
-        errorDetails.put("current_status", ex.getCurrentStatus().name());
+    public ResponseEntity<ApiResponse<Void>> handleCannotCancelOrder(CannotCancelOrderException ex) {
+        log.warn("주문 취소 불가: {} (상태: {})", ex.getMessage(), ex.getCurrentStatus());
+
+        String message = String.format("%s (현재 상태: %s)",
+            ex.getMessage(),
+            ex.getCurrentStatus().name());
 
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
-            .body(new ApiResponse<>(
-                false,
-                null,
-                null,
-                new ApiResponse.ErrorDetail("CANNOT_CANCEL_ORDER", ex.getMessage()),
-                java.time.Instant.now().toString()
-            ));
+            .body(ApiResponse.failure("CANNOT_CANCEL_ORDER", message));
     }
 
     /**
@@ -90,26 +90,26 @@ public class GlobalExceptionHandler {
      * API 명세: MINIMUM_ORDER_NOT_MET (400)
      */
     @ExceptionHandler(MinimumOrderNotMetException.class)
-    public ResponseEntity<ApiResponse<Map<String, Object>>> handleMinimumOrderNotMet(MinimumOrderNotMetException ex) {
-        Map<String, Object> details = new HashMap<>();
-        details.put("current_amount", ex.getCurrentAmount());
-        details.put("minimum_required", ex.getMinimumRequired());
+    public ResponseEntity<ApiResponse<Void>> handleMinimumOrderNotMet(MinimumOrderNotMetException ex) {
+        log.warn("최소 주문 금액 미달: 현재={}원, 최소={}원",
+            ex.getCurrentAmount(), ex.getMinimumRequired());
+
+        String message = String.format(
+            "최소 주문 금액을 충족하지 못했습니다. (현재: %s원, 최소: %s원)",
+            ex.getCurrentAmount(),
+            ex.getMinimumRequired()
+        );
 
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
-            .body(new ApiResponse<>(
-                false,
-                null,
-                null,
-                new ApiResponse.ErrorDetail("MINIMUM_ORDER_NOT_MET", ex.getMessage()),
-                java.time.Instant.now().toString()
-            ));
+            .body(ApiResponse.failure("MINIMUM_ORDER_NOT_MET", message));
     }
 
     // ===== 재고 관련 예외 =====
 
     @ExceptionHandler(InsufficientStockException.class)
     public ResponseEntity<ApiResponse<Void>> handleInsufficientStock(InsufficientStockException ex) {
+        log.warn("재고 부족: {}", ex.getMessage());
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(ApiResponse.failure("OUT_OF_STOCK", ex.getMessage()));
@@ -195,7 +195,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
-        ex.printStackTrace(); // 로그에 출력 (실제로는 로깅 프레임워크 사용 권장)
+        log.error("예상치 못한 서버 오류 발생", ex);
+
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(ApiResponse.failure("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
