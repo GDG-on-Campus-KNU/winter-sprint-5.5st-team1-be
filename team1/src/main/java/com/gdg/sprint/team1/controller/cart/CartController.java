@@ -16,6 +16,7 @@ import com.gdg.sprint.team1.dto.cart.CartResponse;
 import com.gdg.sprint.team1.dto.cart.DeleteCartItemsRequest;
 import com.gdg.sprint.team1.dto.cart.UpdateCartItemRequest;
 import com.gdg.sprint.team1.service.cart.CartService;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/cart")
@@ -37,7 +38,7 @@ public class CartController {
     @PostMapping
     public ResponseEntity<Void> addItem(
             @RequestHeader("X-USER-ID") Integer userId,
-            @RequestBody AddCartItemRequest request
+            @Valid @RequestBody AddCartItemRequest request
     ) {
         cartService.addItem(userId, request.productId(), request.quantity());
         return ResponseEntity.ok().build();
@@ -47,7 +48,7 @@ public class CartController {
     public ResponseEntity<Void> updateQuantity(
             @RequestHeader("X-USER-ID") Integer userId,
             @PathVariable("product_id") Integer productId,
-            @RequestBody UpdateCartItemRequest request
+            @Valid @RequestBody UpdateCartItemRequest request
     ) {
         cartService.updateQuantity(userId, productId, request.quantity());
         return ResponseEntity.ok().build();
@@ -57,7 +58,7 @@ public class CartController {
     @DeleteMapping("/items")
     public ResponseEntity<Void> deleteSelected(
             @RequestHeader("X-USER-ID") Integer userId,
-            @RequestBody DeleteCartItemsRequest request
+            @Valid @RequestBody DeleteCartItemsRequest request
     ) {
         cartService.deleteSelected(userId, request.itemIds());
         return ResponseEntity.ok().build();

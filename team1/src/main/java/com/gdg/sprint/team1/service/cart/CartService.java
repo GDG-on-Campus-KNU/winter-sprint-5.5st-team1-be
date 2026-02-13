@@ -90,14 +90,13 @@ public class CartService {
 
     @Transactional
     public void addItem(Integer userId, Integer productId, Integer quantity) {
-        int safeQuantity = quantity == null || quantity < 1 ? 1 : quantity;
         productRepository.findById(productId.longValue())
             .orElseThrow(() -> new ProductNotFoundException(productId.longValue()));
 
         cartItemRepository.findByIdUserIdAndIdProductId(userId, productId)
             .ifPresentOrElse(
-                item -> item.setQuantity(item.getQuantity() + safeQuantity),
-                () -> cartItemRepository.save(new CartItem(userId, productId, safeQuantity))
+                item -> item.setQuantity(item.getQuantity() + quantity),
+                () -> cartItemRepository.save(new CartItem(userId, productId, quantity))
             );
     }
 
@@ -105,7 +104,7 @@ public class CartService {
     public void updateQuantity(Integer userId, Integer productId, Integer quantity) {
         cartItemRepository.findByIdUserIdAndIdProductId(userId, productId)
             .ifPresent(item -> {
-                if (quantity == null || quantity <= 0) {
+                if (quantity <= 0) {
                     cartItemRepository.deleteByIdUserIdAndIdProductId(userId, productId);
                 } else {
                     item.setQuantity(quantity);

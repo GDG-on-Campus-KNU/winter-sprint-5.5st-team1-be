@@ -2,6 +2,8 @@ package com.gdg.sprint.team1.dto.cart;
 
 import java.util.List;
 
+import jakarta.validation.constraints.NotNull;
+
 public record DeleteCartItemsRequest (
-    List<Integer> itemIds
+    @NotNull List<Integer> itemIds
 ) {}
