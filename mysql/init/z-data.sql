@@ -41,38 +41,49 @@ VALUES
 -- 사용자 보유 쿠폰
 INSERT INTO user_coupons (id, coupon_id, user_id, issued_at, used_at, expired_at)
 VALUES
-    (1, 1, 1, NOW() - INTERVAL 5 DAY, NULL,          NOW() + INTERVAL 25 DAY), -- Alice가 아직 사용하지 않은 10% 쿠폰
-    (2, 2, 1, NOW() - INTERVAL 10 DAY, NOW() - INTERVAL 1 DAY, NOW() + INTERVAL 20 DAY), -- Alice가 이미 사용한 2,000원 쿠폰
-    (3, 2, 2, NOW() - INTERVAL 3 DAY, NULL,          NOW() + INTERVAL 27 DAY); -- Bob이 보유 중인 2,000원 쿠폰
+    (1, 1, 1, NOW() - INTERVAL 5 DAY,  NULL,                      NOW() + INTERVAL 25 DAY),
+    (2, 2, 1, NOW() - INTERVAL 10 DAY, NOW() - INTERVAL 1 DAY,   NOW() + INTERVAL 20 DAY),
+    (3, 2, 2, NOW() - INTERVAL 3 DAY,  NULL,                      NOW() + INTERVAL 27 DAY);
 
 -- 장바구니 예시 데이터
 INSERT INTO cart_items (product_id, user_id, quantity, created_at, updated_at)
 VALUES
-    (1, 1, 2, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 1 DAY), -- Alice: 아메리카노 2잔
-    (5, 1, 1, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 1 DAY), -- Alice: 치즈케이크 1개
-    (8, 2, 1, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 2 DAY), -- Bob: 페퍼로니 피자 1판
-    (11,2, 2, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 2 DAY); -- Bob: 갈릭 디핑 소스 2개
+    (1, 1, 2, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 1 DAY),
+    (5, 1, 1, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 1 DAY),
+    (8, 2, 1, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 2 DAY),
+    (11,2, 2, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 2 DAY);
 
 -- 주문 및 주문 아이템 예시
--- Alice가 카페에서 주문한 예시
-INSERT INTO orders (id, user_id, user_coupon_id, total_product_price, discount_amount, delivery_fee, final_price, delivery_address, order_status, created_at, updated_at)
+-- recipient_name, recipient_phone, delivery_address, delivery_detail_address, delivery_message 컬럼 반영
+INSERT INTO orders (id, user_id, user_coupon_id, total_product_price, discount_amount, delivery_fee, final_price,
+                    recipient_name, recipient_phone, delivery_address, delivery_detail_address, delivery_message,
+                    order_status, created_at, updated_at)
 VALUES
+    -- Alice가 카페에서 주문한 예시
     (1, 1, 2,
-     4500 * 2 + 6500,  -- 아메리카노 2잔 + 치즈케이크 1개
-     2000,             -- 2,000원 할인 쿠폰 사용
+     4500 * 2 + 6500,
+     2000,
      0,
      4500 * 2 + 6500 - 2000,
+     'Alice',
+     '010-1111-2222',
      '서울특별시 강남구 테헤란로 123',
+     '456호',
+     '문 앞에 놓아주세요.',
      'COMPLETED',
      NOW() - INTERVAL 1 DAY,
      NOW() - INTERVAL 1 DAY),
-    -- Bob이 피자샵에서 주문한 예시 (쿠폰 미사용)
+    -- Bob이 피자샵에서 주문한 예시 (쿠폰 미사용, 상세주소/배송메시지 없음)
     (2, 2, NULL,
-     17000 + 1500 * 2 + 2000, -- 페퍼로니 피자 1판 + 디핑 소스 2개 + 콜라 1개
+     17000 + 1500 * 2 + 2000,
      0,
      3000,
      17000 + 1500 * 2 + 2000 + 3000,
+     'Bob',
+     '010-3333-4444',
      '서울특별시 마포구 와우산로 45',
+     NULL,
+     NULL,
      'COMPLETED',
      NOW() - INTERVAL 2 DAY,
      NOW() - INTERVAL 2 DAY);

@@ -112,13 +112,18 @@ CREATE TABLE orders (
     discount_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
     delivery_fee DECIMAL(10, 2) NOT NULL DEFAULT 0,
     final_price DECIMAL(10, 2) NOT NULL,
-    delivery_address TEXT NOT NULL,
+    -- 배송지 정보 (와이어프레임 기준으로 필드 분리)
+    recipient_name VARCHAR(100) NOT NULL,                -- 받는 분
+    recipient_phone VARCHAR(20) NOT NULL,                -- 전화번호
+    delivery_address TEXT NOT NULL,                      -- 주소
+    delivery_detail_address VARCHAR(255),                -- 상세주소 (선택)
+    delivery_message VARCHAR(500),                       -- 배송 메시지 (선택)
     order_status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     -- 유저 삭제 시 해당 유저의 주문 이력은 보존해야 하므로 유저 삭제를 제한
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
-    -- 쿠폰 사용 이력을 잃지 않기 위해 user_coupons 삭제를 제한(RESTRICT)하고, 주문-쿠폰 관계를 유지
+    -- 쿠폰 사용 이력을 잃지 않기 위해 UserCoupons 삭제를 제한(RESTRICT)하고, 주문-쿠폰 관계를 유지
     FOREIGN KEY (user_coupon_id) REFERENCES user_coupons(id) ON DELETE RESTRICT,
     INDEX idx_user_created (user_id, created_at DESC),
     INDEX idx_status (order_status)
