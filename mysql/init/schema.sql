@@ -122,9 +122,9 @@ CREATE TABLE orders (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     -- 유저 삭제 시 해당 유저의 주문 이력은 보존해야 하므로 유저 삭제를 제한
-    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
     -- 쿠폰 사용 이력을 잃지 않기 위해 UserCoupons 삭제를 제한(RESTRICT)하고, 주문-쿠폰 관계를 유지
-    FOREIGN KEY (user_coupon_id) REFERENCES UserCoupons(id) ON DELETE RESTRICT,
+    FOREIGN KEY (user_coupon_id) REFERENCES user_coupons(id) ON DELETE RESTRICT,
     INDEX idx_user_created (user_id, created_at DESC),
     INDEX idx_status (order_status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

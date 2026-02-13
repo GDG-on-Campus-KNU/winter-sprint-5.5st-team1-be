@@ -65,6 +65,16 @@ public class CartController {
         return ResponseEntity.ok(ApiResponse.success(null, "장바구니 선택 삭제 성공"));
     }
 
+    // 단일 삭제
+    @DeleteMapping("/items/{product_id}")
+    public ResponseEntity<ApiResponse<Void>> deleteItem(
+            @RequestHeader("X-USER-ID") Integer userId,
+            @PathVariable("product_id") Integer productId
+    ) {
+        cartService.deleteItem(userId, productId);
+        return ResponseEntity.ok(ApiResponse.success(null, "장바구니 상품 삭제 성공"));
+    }
+
     // 전체 삭제
     @DeleteMapping
     public ResponseEntity<ApiResponse<Void>> deleteAll(

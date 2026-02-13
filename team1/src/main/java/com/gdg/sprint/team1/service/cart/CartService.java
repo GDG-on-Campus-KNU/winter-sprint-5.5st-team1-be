@@ -134,6 +134,11 @@ public class CartService {
     }
 
     @Transactional
+    public void deleteItem(Integer userId, Integer productId) {
+        cartItemRepository.deleteByIdUserIdAndIdProductId(userId, productId);
+    }
+
+    @Transactional
     public void deleteAll(Integer userId) {
         List<CartItem> items = cartItemRepository.findAllByIdUserId(userId);
         if (!items.isEmpty()) {
