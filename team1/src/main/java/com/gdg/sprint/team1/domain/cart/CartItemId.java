@@ -25,6 +25,9 @@ public class CartItemId implements Serializable {
     public Integer getUserId() { return userId; }
     public Integer getProductId() { return productId; }
 
+    public void setUserId(Integer userId) { this.userId = userId; }
+    public void setProductId(Integer productId) { this.productId = productId; }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

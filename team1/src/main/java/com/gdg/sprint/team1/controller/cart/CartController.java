@@ -48,13 +48,13 @@ public class CartController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/{itemId}")
+    @PatchMapping("/items/{product_id}")
     public ResponseEntity<Void> updateQuantity(
             @RequestHeader("X-USER-ID") Integer userId,
-            @PathVariable Integer itemId,
+            @PathVariable("product_id") Integer productId,
             @RequestBody UpdateCartItemRequest request
     ) {
-        // TODO: cartService.updateQuantity(userId, itemId, request.quantity())
+        // TODO: cartService.updateQuantity(userId, productId, request.quantity())
         // if quantity <= 0 => delete
         return ResponseEntity.ok().build();
     }
