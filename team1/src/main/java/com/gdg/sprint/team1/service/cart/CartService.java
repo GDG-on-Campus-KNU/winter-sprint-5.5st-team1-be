@@ -113,15 +113,23 @@ public class CartService {
             throw new IllegalArgumentException("quantity must be >= 1");
         }
 
-        productRepository.findById(productId.longValue())
+        Product product = productRepository.findById(productId.longValue())
             .orElseThrow(() -> new ProductNotFoundException(productId.longValue()));
+
+        Integer stock = product.getStock();
+        if (stock != null && quantity > stock) {
+            throw new IllegalArgumentException("OUT_OF_STOCK");
+        }
 
         int updated = cartItemRepository.incrementQuantity(userId, productId, quantity);
         if (updated == 0) {
             try {
                 cartItemRepository.save(new CartItem(userId, productId, quantity));
             } catch (org.springframework.dao.DataIntegrityViolationException ex) {
-                cartItemRepository.incrementQuantity(userId, productId, quantity);
+                int retried = cartItemRepository.incrementQuantity(userId, productId, quantity);
+                if (retried == 0) {
+                    throw new IllegalArgumentException("OUT_OF_STOCK");
+                }
             }
         }
     }
