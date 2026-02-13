@@ -24,6 +24,7 @@ public interface CartItemRepository extends JpaRepository<CartItem, CartItemId> 
         update CartItem c
         set c.quantity = c.quantity + :quantity
         where c.id.userId = :userId and c.id.productId = :productId
+          and c.quantity + :quantity >= 1
         """)
     int incrementQuantity(@Param("userId") Integer userId,
                           @Param("productId") Integer productId,

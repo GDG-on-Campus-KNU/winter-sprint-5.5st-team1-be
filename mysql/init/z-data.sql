@@ -71,4 +71,3 @@ VALUES
     (8, 2, 1, 17000, NOW() - INTERVAL 2 DAY),
     (11,2, 2, 1500,  NOW() - INTERVAL 2 DAY),
     (12,2, 1, 2000,  NOW() - INTERVAL 2 DAY);
-

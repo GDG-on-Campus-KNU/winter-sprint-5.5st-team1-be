@@ -75,7 +75,7 @@ public class CartService {
             boolean isAvailable = product != null
                 && "ACTIVE".equals(product.getProductStatus())
                 && product.getStock() != null
-                && product.getStock() > 0;
+                && product.getStock() >= quantity;
 
             items.add(new CartItemResponse(
                 productId,
@@ -109,15 +109,27 @@ public class CartService {
 
     @Transactional
     public void addItem(Integer userId, Integer productId, Integer quantity) {
-        productRepository.findById(productId.longValue())
+        if (quantity == null || quantity < 1) {
+            throw new IllegalArgumentException("quantity must be >= 1");
+        }
+
+        Product product = productRepository.findById(productId.longValue())
             .orElseThrow(() -> new ProductNotFoundException(productId.longValue()));
+
+        Integer stock = product.getStock();
+        if (stock != null && quantity > stock) {
+            throw new IllegalArgumentException("OUT_OF_STOCK");
+        }
 
         int updated = cartItemRepository.incrementQuantity(userId, productId, quantity);
         if (updated == 0) {
             try {
                 cartItemRepository.save(new CartItem(userId, productId, quantity));
             } catch (org.springframework.dao.DataIntegrityViolationException ex) {
-                cartItemRepository.incrementQuantity(userId, productId, quantity);
+                int retried = cartItemRepository.incrementQuantity(userId, productId, quantity);
+                if (retried == 0) {
+                    throw new IllegalArgumentException("OUT_OF_STOCK");
+                }
             }
         }
     }
@@ -126,9 +138,15 @@ public class CartService {
     public void updateQuantity(Integer userId, Integer productId, Integer quantity) {
         cartItemRepository.findByIdUserIdAndIdProductId(userId, productId)
             .ifPresent(item -> {
-                if (quantity <= 0) {
+                if (quantity == null || quantity <= 0) {
                     cartItemRepository.deleteByIdUserIdAndIdProductId(userId, productId);
                 } else {
+                    Product product = productRepository.findById(productId.longValue())
+                        .orElseThrow(() -> new ProductNotFoundException(productId.longValue()));
+                    Integer stock = product.getStock();
+                    if (stock != null && quantity > stock) {
+                        throw new IllegalArgumentException("OUT_OF_STOCK");
+                    }
                     item.setQuantity(quantity);
                 }
             });
