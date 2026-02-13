@@ -141,6 +141,12 @@ public class CartService {
                 if (quantity == null || quantity <= 0) {
                     cartItemRepository.deleteByIdUserIdAndIdProductId(userId, productId);
                 } else {
+                    Product product = productRepository.findById(productId.longValue())
+                        .orElseThrow(() -> new ProductNotFoundException(productId.longValue()));
+                    Integer stock = product.getStock();
+                    if (stock != null && quantity > stock) {
+                        throw new IllegalArgumentException("OUT_OF_STOCK");
+                    }
                     item.setQuantity(quantity);
                 }
             });
