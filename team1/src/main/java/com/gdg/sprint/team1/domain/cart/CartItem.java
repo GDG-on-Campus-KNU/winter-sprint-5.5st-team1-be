@@ -29,7 +29,7 @@ public class CartItem {
 
     public CartItem(Integer userId, Integer productId, Integer quantity) {
         this.id = new CartItemId(userId, productId);
-        this.quantity = quantity;
+        setQuantity(quantity);
     }
 
     @PrePersist

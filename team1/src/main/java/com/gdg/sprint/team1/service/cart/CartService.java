@@ -109,6 +109,10 @@ public class CartService {
 
     @Transactional
     public void addItem(Integer userId, Integer productId, Integer quantity) {
+        if (quantity == null || quantity < 1) {
+            throw new IllegalArgumentException("quantity must be >= 1");
+        }
+
         productRepository.findById(productId.longValue())
             .orElseThrow(() -> new ProductNotFoundException(productId.longValue()));
 
