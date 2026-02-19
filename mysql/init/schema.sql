@@ -27,13 +27,14 @@ CREATE TABLE users (
 -- 한 상점(Stores)은 여러 상품(Products)을 가지는 1:N 관계입니다.
 -- 상점이 삭제될 경우 기존 주문/상품 이력 보존을 위해 상품을 자동으로 지우지 않도록 ON DELETE RESTRICT 를 사용합니다.
 CREATE TABLE products (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     store_id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     price DECIMAL(10, 2) NOT NULL,
     stock INT NOT NULL DEFAULT 0,
     product_status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+    version BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     -- 특정 상점이 삭제되더라도 기존 상품/주문 이력은 보호해야 하므로 RESTRICT 로 상점 삭제를 막습니다.
@@ -46,7 +47,7 @@ CREATE TABLE products (
 -- Users(1) - CartItems(N), Products(1) - CartItems(N) 관계를 표현하는 조인 테이블입니다.
 -- 유저나 상품이 삭제되면 장바구니의 해당 레코드는 의미가 없어지므로 둘 다 ON DELETE CASCADE 로 함께 제거되도록 합니다.
 CREATE TABLE cart_items (
-    product_id INT NOT NULL,
+    product_id BIGINT NOT NULL,
     user_id INT NOT NULL,
     quantity INT NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -71,7 +72,7 @@ CREATE TABLE coupons (
     coupon_type ENUM('PERCENTAGE', 'FIXED') NOT NULL,
 	  discount_value DECIMAL(10, 2) NOT NULL,
     description TEXT,
-    coupon_status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+    coupon_status ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
     valid_days INT NOT NULL DEFAULT 30,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -119,6 +120,7 @@ CREATE TABLE orders (
     delivery_detail_address VARCHAR(255),                -- 상세주소 (선택)
     delivery_message VARCHAR(500),                       -- 배송 메시지 (선택)
     order_status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    cancel_reason VARCHAR(500) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     -- 유저 삭제 시 해당 유저의 주문 이력은 보존해야 하므로 유저 삭제를 제한
@@ -134,7 +136,7 @@ CREATE TABLE orders (
 -- 주문이 삭제되면 해당 주문의 상세 항목들도 더 이상 의미가 없으므로 order_id 는 ON DELETE CASCADE 를 사용합니다.
 -- 반대로 상품이 삭제되더라도 과거에 어떤 상품이 얼마에 팔렸는지 주문 이력은 남겨야 하므로 product_id 는 ON DELETE RESTRICT 를 사용합니다.
 CREATE TABLE order_items (
-    product_id INT NOT NULL,
+    product_id BIGINT NOT NULL,
     order_id INT NOT NULL,
     quantity INT NOT NULL,
     unit_price DECIMAL(10, 2) NOT NULL,
