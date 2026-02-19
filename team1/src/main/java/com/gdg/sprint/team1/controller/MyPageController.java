@@ -14,7 +14,7 @@ import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.controller.api.MyPageApi;
 import com.gdg.sprint.team1.dto.auth.UserMeResponse;
 import com.gdg.sprint.team1.dto.my.MyCouponResponse;
-import com.gdg.sprint.team1.exception.AuthRequiredException;
+import com.gdg.sprint.team1.security.CurrentUser;
 import com.gdg.sprint.team1.security.UserContextHolder;
 import com.gdg.sprint.team1.service.UserCouponService;
 import com.gdg.sprint.team1.service.UserService;
@@ -27,27 +27,22 @@ public class MyPageController implements MyPageApi {
     private final UserService userService;
     private final UserCouponService userCouponService;
 
-    private Integer currentUserId() {
-        Integer userId = UserContextHolder.getCurrentUserId();
-        if (userId == null) {
-            throw new AuthRequiredException();
-        }
-        return userId;
-    }
-
     @Override
     @GetMapping("/info")
-    public ResponseEntity<ApiResponse<UserMeResponse>> getMyInfo() {
-        Integer userId = currentUserId();
-        UserMeResponse data = UserMeResponse.from(userService.findById(userId));
+    public ResponseEntity<ApiResponse<UserMeResponse>> getMyInfo(
+        @CurrentUser UserContextHolder.UserContext user
+    ) {
+        UserMeResponse data = UserMeResponse.from(userService.findById(user.userId()));
         return ResponseEntity.ok(ApiResponse.success(data, "조회 성공"));
     }
 
     @Override
     @GetMapping("/coupons")
-    public ResponseEntity<ApiResponse<List<MyCouponResponse>>> getMyCoupons(@RequestParam(required = false) String status) {
-        Integer userId = currentUserId();
-        List<MyCouponResponse> data = userCouponService.findCouponsByUserId(userId, status)
+    public ResponseEntity<ApiResponse<List<MyCouponResponse>>> getMyCoupons(
+        @CurrentUser UserContextHolder.UserContext user,
+        @RequestParam(required = false) String status
+    ) {
+        List<MyCouponResponse> data = userCouponService.findCouponsByUserId(user.userId(), status)
             .stream()
             .map(MyCouponResponse::from)
             .toList();

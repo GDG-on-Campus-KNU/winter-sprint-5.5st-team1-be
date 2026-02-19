@@ -31,7 +31,6 @@ import com.gdg.sprint.team1.entity.OrderItem;
 import com.gdg.sprint.team1.entity.Product;
 import com.gdg.sprint.team1.entity.User;
 import com.gdg.sprint.team1.entity.UserCoupon;
-import com.gdg.sprint.team1.exception.AuthRequiredException;
 import com.gdg.sprint.team1.exception.CannotCancelOrderException;
 import com.gdg.sprint.team1.exception.EmptyOrderException;
 import com.gdg.sprint.team1.exception.InsufficientStockException;
@@ -40,7 +39,6 @@ import com.gdg.sprint.team1.exception.ProductNotFoundException;
 import com.gdg.sprint.team1.exception.UnauthorizedOrderAccessException;
 import com.gdg.sprint.team1.repository.OrderRepository;
 import com.gdg.sprint.team1.repository.ProductRepository;
-import com.gdg.sprint.team1.security.UserContextHolder;
 
 @Service
 @RequiredArgsConstructor
@@ -55,17 +53,8 @@ public class OrderService {
     private final CartService cartService;
     private final UserCouponService userCouponService;
 
-    private Integer currentUserId() {
-        Integer userId = UserContextHolder.getCurrentUserId();
-        if (userId == null) {
-            throw new AuthRequiredException();
-        }
-        return userId;
-    }
-
     @Transactional
-    public CreateOrderResponse createOrder(CreateOrderRequest request) {
-        Integer userId = currentUserId();
+    public CreateOrderResponse createOrder(Integer userId, CreateOrderRequest request) {
         log.debug("주문 생성 시작: userId={}", userId);
 
         User user = userService.findById(userId);
@@ -82,8 +71,7 @@ public class OrderService {
     }
 
     @Transactional
-    public CreateOrderResponse createOrderFromCart(CreateOrderFromCartRequest request) {
-        Integer userId = currentUserId();
+    public CreateOrderResponse createOrderFromCart(Integer userId, CreateOrderFromCartRequest request) {
         log.debug("장바구니 기반 주문 생성 시작: userId={}", userId);
 
         User user = userService.findById(userId);
@@ -239,8 +227,7 @@ public class OrderService {
     ) {}
 
     @Transactional(readOnly = true)
-    public Page<OrderResponse> getOrders(Integer page, Integer limit, String status) {
-        Integer userId = currentUserId();
+    public Page<OrderResponse> getOrders(Integer userId, Integer page, Integer limit, String status) {
         int safePage = page != null && page >= 1 ? page : 1;
         int safeLimit = limit != null && limit >= 1 ? Math.min(limit, 100) : 10;
 
@@ -269,8 +256,7 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public OrderDetailResponse getOrderDetail(Integer orderId) {
-        Integer userId = currentUserId();
+    public OrderDetailResponse getOrderDetail(Integer userId, Integer orderId) {
         log.debug("주문 상세 조회: userId={}, orderId={}", userId, orderId);
 
         Order order = orderRepository.findWithDetailsById(orderId)
@@ -285,8 +271,7 @@ public class OrderService {
     }
 
     @Transactional
-    public CancelOrderResponse cancelOrder(Integer orderId, String cancelReason) {
-        Integer userId = currentUserId();
+    public CancelOrderResponse cancelOrder(Integer userId, Integer orderId, String cancelReason) {
         log.debug("주문 취소 시작: userId={}, orderId={}", userId, orderId);
 
         Order order = orderRepository.findWithDetailsById(orderId)

@@ -17,14 +17,12 @@ import com.gdg.sprint.team1.dto.cart.CartItemResponse;
 import com.gdg.sprint.team1.dto.cart.CartResponse;
 import com.gdg.sprint.team1.dto.cart.CartSummary;
 import com.gdg.sprint.team1.entity.Product;
-import com.gdg.sprint.team1.exception.AuthRequiredException;
 import com.gdg.sprint.team1.exception.CartItemNotFoundException;
 import com.gdg.sprint.team1.exception.EmptyCartException;
 import com.gdg.sprint.team1.exception.InsufficientStockException;
 import com.gdg.sprint.team1.exception.ProductNotFoundException;
 import com.gdg.sprint.team1.repository.CartItemRepository;
 import com.gdg.sprint.team1.repository.ProductRepository;
-import com.gdg.sprint.team1.security.UserContextHolder;
 
 @Service
 @RequiredArgsConstructor
@@ -36,17 +34,8 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
 
-    private Integer currentUserId() {
-        Integer userId = UserContextHolder.getCurrentUserId();
-        if (userId == null) {
-            throw new AuthRequiredException();
-        }
-        return userId;
-    }
-
     @Transactional(readOnly = true)
-    public CartResponse getCart() {
-        Integer userId = currentUserId();
+    public CartResponse getCart(Integer userId) {
         List<CartItem> cartItems = cartItemRepository.findAllByIdUserId(userId);
         if (cartItems.isEmpty()) {
             CartSummary summary = new CartSummary(
@@ -114,8 +103,7 @@ public class CartService {
     }
 
     @Transactional
-    public void addItem(Long productId, Integer quantity) {
-        Integer userId = currentUserId();
+    public void addItem(Integer userId, Long productId, Integer quantity) {
         if (quantity == null || quantity < 1) {
             throw new IllegalArgumentException("quantity must be >= 1");
         }
@@ -147,8 +135,7 @@ public class CartService {
     }
 
     @Transactional
-    public void updateQuantity(Long productId, Integer quantity) {
-        Integer userId = currentUserId();
+    public void updateQuantity(Integer userId, Long productId, Integer quantity) {
         CartItem item = cartItemRepository.findByIdUserIdAndIdProductId(userId, productId)
             .orElseThrow(() -> new CartItemNotFoundException(productId));
         if (quantity == null || quantity <= 0) {
@@ -169,21 +156,18 @@ public class CartService {
     }
 
     @Transactional
-    public void deleteSelected(List<Long> productIds) {
-        Integer userId = currentUserId();
+    public void deleteSelected(Integer userId, List<Long> productIds) {
         if (productIds == null || productIds.isEmpty()) return;
         cartItemRepository.deleteById_UserIdAndId_ProductIdIn(userId, productIds);
     }
 
     @Transactional
-    public void deleteItem(Long productId) {
-        Integer userId = currentUserId();
+    public void deleteItem(Integer userId, Long productId) {
         cartItemRepository.deleteByIdUserIdAndIdProductId(userId, productId);
     }
 
     @Transactional
-    public void deleteAll() {
-        Integer userId = currentUserId();
+    public void deleteAll(Integer userId) {
         List<CartItem> items = cartItemRepository.findAllByIdUserId(userId);
         if (!items.isEmpty()) {
             cartItemRepository.deleteAll(items);

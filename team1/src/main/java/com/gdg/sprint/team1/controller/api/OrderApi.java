@@ -11,6 +11,8 @@ import com.gdg.sprint.team1.dto.order.CreateOrderRequest;
 import com.gdg.sprint.team1.dto.order.CreateOrderResponse;
 import com.gdg.sprint.team1.dto.order.OrderDetailResponse;
 import com.gdg.sprint.team1.dto.order.OrderResponse;
+import com.gdg.sprint.team1.security.CurrentUser;
+import com.gdg.sprint.team1.security.UserContextHolder;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,19 +33,26 @@ public interface OrderApi {
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "주문 생성됨")
     })
-    ResponseEntity<ApiResponse<CreateOrderResponse>> createOrder(@Valid CreateOrderRequest request);
+    ResponseEntity<ApiResponse<CreateOrderResponse>> createOrder(
+        @Parameter(hidden = true) @CurrentUser UserContextHolder.UserContext user,
+        @Valid CreateOrderRequest request
+    );
 
     @Operation(summary = "주문 생성 (장바구니)", description = "장바구니 상품으로 주문. 장바구니 조회·재고 확인·주문 생성·장바구니 비우기")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "주문 생성됨")
     })
-    ResponseEntity<ApiResponse<CreateOrderResponse>> createOrderFromCart(@Valid CreateOrderFromCartRequest request);
+    ResponseEntity<ApiResponse<CreateOrderResponse>> createOrderFromCart(
+        @Parameter(hidden = true) @CurrentUser UserContextHolder.UserContext user,
+        @Valid CreateOrderFromCartRequest request
+    );
 
     @Operation(summary = "주문 목록 조회", description = "내 주문 목록 페이징. 상태 필터(PENDING, CONFIRMED, SHIPPING, DELIVERED, CANCELLED) 지원")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
     })
     ResponseEntity<ApiResponse<Page<OrderResponse>>> getOrders(
+        @Parameter(hidden = true) @CurrentUser UserContextHolder.UserContext user,
         @Parameter(description = "페이지 번호 (기본: 1)", example = "1") @Min(1) Integer page,
         @Parameter(description = "페이지당 항목 수 (기본: 10)", example = "10") @Min(1) @Max(100) Integer limit,
         @Parameter(description = "주문 상태", example = "PENDING", schema = @Schema(allowableValues = {"PENDING", "CONFIRMED", "SHIPPING", "DELIVERED", "CANCELLED"})) String status
@@ -54,12 +63,19 @@ public interface OrderApi {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "주문 없음")
     })
-    ResponseEntity<ApiResponse<OrderDetailResponse>> getOrderDetail(@Positive Integer orderId);
+    ResponseEntity<ApiResponse<OrderDetailResponse>> getOrderDetail(
+        @Parameter(hidden = true) @CurrentUser UserContextHolder.UserContext user,
+        @Positive Integer orderId
+    );
 
     @Operation(summary = "주문 취소", description = "취소 시 재고·쿠폰 복구. PENDING·CONFIRMED만 취소 가능")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "취소 성공"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "취소 불가 상태")
     })
-    ResponseEntity<ApiResponse<CancelOrderResponse>> cancelOrder(@Positive Integer orderId, @Valid CancelOrderRequest request);
+    ResponseEntity<ApiResponse<CancelOrderResponse>> cancelOrder(
+        @Parameter(hidden = true) @CurrentUser UserContextHolder.UserContext user,
+        @Positive Integer orderId,
+        @Valid CancelOrderRequest request
+    );
 }
