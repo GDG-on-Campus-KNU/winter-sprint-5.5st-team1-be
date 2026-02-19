@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Positive;
 public record AddCartItemRequest(
     @NotNull
     @Positive(message = "상품 ID는 양수여야 합니다.")
-    Integer productId,
+    Long productId,
     @NotNull
     @Min(1)
     Integer quantity

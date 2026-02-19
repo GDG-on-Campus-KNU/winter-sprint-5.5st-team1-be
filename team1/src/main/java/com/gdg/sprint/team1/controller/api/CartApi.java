@@ -35,7 +35,7 @@ public interface CartApi {
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "변경 성공")
     })
-    ResponseEntity<ApiResponse<Void>> updateQuantity(@Positive Integer productId, @Valid UpdateCartItemRequest request);
+    ResponseEntity<ApiResponse<Void>> updateQuantity(@Positive Long productId, @Valid UpdateCartItemRequest request);
 
     @Operation(summary = "장바구니 선택 삭제", description = "상품 ID 목록으로 선택 삭제")
     @ApiResponses({
@@ -47,7 +47,7 @@ public interface CartApi {
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "삭제 성공")
     })
-    ResponseEntity<ApiResponse<Void>> deleteItem(@Positive Integer productId);
+    ResponseEntity<ApiResponse<Void>> deleteItem(@Positive Long productId);
 
     @Operation(summary = "장바구니 전체 삭제", description = "현재 사용자 장바구니 전체 비우기")
     @ApiResponses({

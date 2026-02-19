@@ -48,7 +48,7 @@ public class CartController implements CartApi {
     @Override
     @PatchMapping("/items/{product_id}")
     public ResponseEntity<ApiResponse<Void>> updateQuantity(
-        @PathVariable("product_id") @Positive Integer productId,
+        @PathVariable("product_id") @Positive Long productId,
         @Valid @RequestBody UpdateCartItemRequest request
     ) {
         cartService.updateQuantity(productId, request.quantity());
@@ -64,7 +64,7 @@ public class CartController implements CartApi {
 
     @Override
     @DeleteMapping("/items/{product_id}")
-    public ResponseEntity<ApiResponse<Void>> deleteItem(@PathVariable("product_id") @Positive Integer productId) {
+    public ResponseEntity<ApiResponse<Void>> deleteItem(@PathVariable("product_id") @Positive Long productId) {
         cartService.deleteItem(productId);
         return ResponseEntity.ok(ApiResponse.success(null, "장바구니 상품 삭제 성공"));
     }

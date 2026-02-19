@@ -86,7 +86,7 @@ public class CartService {
                 && product.getStock() >= quantity;
 
             items.add(new CartItemResponse(
-                productId != null ? productId.intValue() : null,
+                productId,
                 product != null ? product.getName() : null,
                 productPrice,
                 product != null ? product.getProductStatus() : null,
@@ -114,14 +114,14 @@ public class CartService {
     }
 
     @Transactional
-    public void addItem(Integer productId, Integer quantity) {
+    public void addItem(Long productId, Integer quantity) {
         Integer userId = currentUserId();
         if (quantity == null || quantity < 1) {
             throw new IllegalArgumentException("quantity must be >= 1");
         }
 
-        Product product = productRepository.findById(productId.longValue())
-            .orElseThrow(() -> new ProductNotFoundException(productId.longValue()));
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new ProductNotFoundException(productId));
 
         Integer stock = product.getStock();
         if (stock != null && quantity > stock) {
@@ -132,13 +132,12 @@ public class CartService {
             );
         }
 
-        Long productIdLong = productId.longValue();
-        int updated = cartItemRepository.incrementQuantity(userId, productIdLong, quantity);
+        int updated = cartItemRepository.incrementQuantity(userId, productId, quantity);
         if (updated == 0) {
             try {
-                cartItemRepository.save(new CartItem(userId, productIdLong, quantity));
+                cartItemRepository.save(new CartItem(userId, productId, quantity));
             } catch (org.springframework.dao.DataIntegrityViolationException ex) {
-                int retried = cartItemRepository.incrementQuantity(userId, productIdLong, quantity);
+                int retried = cartItemRepository.incrementQuantity(userId, productId, quantity);
                 if (retried > 0) {
                     return;
                 }
@@ -148,16 +147,15 @@ public class CartService {
     }
 
     @Transactional
-    public void updateQuantity(Integer productId, Integer quantity) {
+    public void updateQuantity(Long productId, Integer quantity) {
         Integer userId = currentUserId();
-        Long productIdLong = productId.longValue();
-        CartItem item = cartItemRepository.findByIdUserIdAndIdProductId(userId, productIdLong)
+        CartItem item = cartItemRepository.findByIdUserIdAndIdProductId(userId, productId)
             .orElseThrow(() -> new CartItemNotFoundException(productId));
         if (quantity == null || quantity <= 0) {
-            cartItemRepository.deleteByIdUserIdAndIdProductId(userId, productIdLong);
+            cartItemRepository.deleteByIdUserIdAndIdProductId(userId, productId);
         } else {
-            Product product = productRepository.findById(productIdLong)
-                .orElseThrow(() -> new ProductNotFoundException(productIdLong));
+            Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
             Integer stock = product.getStock();
             if (stock != null && quantity > stock) {
                 throw new InsufficientStockException(
@@ -171,17 +169,16 @@ public class CartService {
     }
 
     @Transactional
-    public void deleteSelected(List<Integer> productIds) {
+    public void deleteSelected(List<Long> productIds) {
         Integer userId = currentUserId();
         if (productIds == null || productIds.isEmpty()) return;
-        List<Long> productIdLongs = productIds.stream().map(Integer::longValue).collect(Collectors.toList());
-        cartItemRepository.deleteById_UserIdAndId_ProductIdIn(userId, productIdLongs);
+        cartItemRepository.deleteById_UserIdAndId_ProductIdIn(userId, productIds);
     }
 
     @Transactional
-    public void deleteItem(Integer productId) {
+    public void deleteItem(Long productId) {
         Integer userId = currentUserId();
-        cartItemRepository.deleteByIdUserIdAndIdProductId(userId, productId.longValue());
+        cartItemRepository.deleteByIdUserIdAndIdProductId(userId, productId);
     }
 
     @Transactional

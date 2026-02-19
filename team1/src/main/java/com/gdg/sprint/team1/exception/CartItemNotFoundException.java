@@ -6,7 +6,7 @@ public class CartItemNotFoundException extends RuntimeException {
         super("장바구니에 해당 상품이 없습니다.");
     }
 
-    public CartItemNotFoundException(Integer productId) {
+    public CartItemNotFoundException(Long productId) {
         super("장바구니에 해당 상품이 없습니다. (상품 ID: " + productId + ")");
     }
 
