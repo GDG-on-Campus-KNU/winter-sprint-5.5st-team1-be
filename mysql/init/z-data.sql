@@ -3,11 +3,6 @@
 -- 테이블 생성 스키마(schema.sql) 이후에 실행되도록 z- 접두어를 사용했습니다.
 SET NAMES utf8mb4;
 use team1;
--- 매장 2개
-INSERT INTO stores (id, name, description)
-VALUES
-    (1, '강남 카페', '스페셜티 커피와 디저트를 판매하는 카페'),
-    (2, '홍대 피자샵', '수제 피자와 사이드를 판매하는 매장');
 
 -- 사용자 3명 (목업, 평문 비밀번호. 회원가입 사용자만 BCrypt)
 INSERT INTO users (id, email, password, name, phone, address, role)
@@ -16,22 +11,21 @@ VALUES
     (2, 'dev2@gdg.com', 'dev123', 'Dev2', '010-2222-2222', '서울시 마포구', 'USER'),
     (3, 'dev3@gdg.com', 'dev123', 'Dev3', '010-3333-3333', '서울시 서초구', 'USER');
 
--- 상품 10개 이상 (강남 카페 6개, 홍대 피자샵 6개)
-INSERT INTO products (id, store_id, name, description, price, stock, product_status)
+-- 상품 12개
+INSERT INTO products (id, name, description, price, stock, product_status)
 VALUES
-    (1, 1, '아메리카노',        '진한 에스프레소와 깔끔한 맛의 커피',                 4500, 100, 'ACTIVE'),
-    (2, 1, '카페라테',          '우유가 들어간 부드러운 커피',                       5000, 80,  'ACTIVE'),
-    (3, 1, '바닐라라테',        '바닐라 시럽이 들어간 달콤한 라테',                  5500, 60,  'ACTIVE'),
-    (4, 1, '콜드브루',          '12시간 이상 추출한 콜드브루 커피',                  5500, 50,  'ACTIVE'),
-    (5, 1, '치즈케이크',        '진한 치즈 풍미의 디저트 케이크',                    6500, 30,  'ACTIVE'),
-    (6, 1, '초코브라우니',      '진한 초콜릿 맛의 브라우니',                        6000, 40,  'ACTIVE'),
-
-    (7,  2, '마르게리타 피자',  '토마토 소스와 모짜렐라 치즈의 기본 피자',           15000, 40, 'ACTIVE'),
-    (8,  2, '페퍼로니 피자',    '페퍼로니 토핑이 듬뿍 올라간 피자',                 17000, 35, 'ACTIVE'),
-    (9,  2, '콤비네이션 피자',  '다양한 토핑이 올려진 피자',                         18000, 30, 'ACTIVE'),
-    (10, 2, '고르곤졸라 피자',  '꿀과 함께 먹는 고르곤졸라 치즈 피자',              19000, 25, 'ACTIVE'),
-    (11, 2, '갈릭 디핑 소스',   '피자와 함께 먹는 마늘 디핑 소스',                  1500,  200,'ACTIVE'),
-    (12, 2, '콜라 500ml',       '탄산음료 콜라 500ml',                              2000,  150,'ACTIVE');
+    (1, 'A4 노트',           '80매 라인 노트',                                   4500, 100, 'ACTIVE'),
+    (2, '볼펜 12개입',        '검정 볼펜 12개 세트',                             5000, 80,  'ACTIVE'),
+    (3, '형광펜 세트',        '6색 형광펜 세트',                                  5500, 60,  'ACTIVE'),
+    (4, '스티커 팩',          '다양한 디자인의 스티커 50매',                      5500, 50,  'ACTIVE'),
+    (5, '파일철',             'A4 50매용 바인더',                                 6500, 30,  'ACTIVE'),
+    (6, '클립 세트',          '다양한 크기의 클립 100개입',                       6000, 40,  'ACTIVE'),
+    (7, '토트백',             '심플한 캔버스 토트백',                             15000, 40, 'ACTIVE'),
+    (8, '지갑',               '슬림 카드지갑',                                    17000, 35, 'ACTIVE'),
+    (9, '휴대폰 케이스',      '실리콘 휴대폰 케이스',                            18000, 30, 'ACTIVE'),
+    (10, '이어폰 파우치',     '이어폰 보관용 파우치',                            19000, 25, 'ACTIVE'),
+    (11, '마스크 5매입',      '일회용 마스크 5매',                               1500,  200,'ACTIVE'),
+    (12, '손소독제 50ml',     '휴대용 손소독제 50ml',                            2000,  150,'ACTIVE');
 
 -- 쿠폰 2개 (정률, 정액)
 INSERT INTO coupons (id, name, min_order_price, coupon_type, discount_value, description, coupon_status, valid_days)
@@ -65,10 +59,10 @@ VALUES
 
 INSERT INTO order_items (product_id, order_id, quantity, unit_price, created_at)
 VALUES
-    -- 주문 1: Alice (카페)
+    -- 주문 1: Dev1 (문구점)
     (1, 1, 2, 4500, NOW() - INTERVAL 1 DAY),
     (5, 1, 1, 6500, NOW() - INTERVAL 1 DAY),
-    -- 주문 2: Bob (피자샵)
+    -- 주문 2: Dev2 (잡화점)
     (8, 2, 1, 17000, NOW() - INTERVAL 2 DAY),
     (11,2, 2, 1500,  NOW() - INTERVAL 2 DAY),
     (12,2, 1, 2000,  NOW() - INTERVAL 2 DAY);

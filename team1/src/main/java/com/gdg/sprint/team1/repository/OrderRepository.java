@@ -23,8 +23,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
         "userCoupon",
         "userCoupon.coupon",
         "orderItems",
-        "orderItems.product",
-        "orderItems.product.store"
+        "orderItems.product"
     })
     Optional<Order> findWithDetailsById(Integer orderId);
 }

@@ -17,12 +17,9 @@ import lombok.RequiredArgsConstructor;
 
 import com.gdg.sprint.team1.dto.product.*;
 import com.gdg.sprint.team1.entity.Product;
-import com.gdg.sprint.team1.entity.Store;
 import com.gdg.sprint.team1.exception.ProductNotFoundException;
-import com.gdg.sprint.team1.exception.StoreNotFoundException;
 import com.gdg.sprint.team1.repository.ProductRepository;
 import com.gdg.sprint.team1.repository.ProductSpecs;
-import com.gdg.sprint.team1.repository.StoreRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -34,13 +31,11 @@ public class ProductService {
     private static final String DEFAULT_ORDER = "desc";
 
     private final ProductRepository productRepository;
-    private final StoreRepository storeRepository;
 
     @Transactional(readOnly = true)
     public ProductListResponse getProductList(
         Integer page,
         Integer limit,
-        Long storeId,
         String status,
         String search,
         BigDecimal minPrice,
@@ -56,8 +51,7 @@ public class ProductService {
         boolean exclude = Boolean.TRUE.equals(excludeSoldOut);
 
         Specification<Product> spec = Specification
-            .where(ProductSpecs.storeId(storeId))
-            .and(ProductSpecs.status(status))
+            .where(ProductSpecs.status(status))
             .and(ProductSpecs.minPrice(minPrice))
             .and(ProductSpecs.maxPrice(maxPrice))
             .and(ProductSpecs.excludeSoldOut(exclude))
@@ -76,7 +70,6 @@ public class ProductService {
         if (minPrice != null) filtersApplied.put("min_price", minPrice);
         if (maxPrice != null) filtersApplied.put("max_price", maxPrice);
         if (status != null && !status.isBlank()) filtersApplied.put("status", status);
-        if (storeId != null) filtersApplied.put("store_id", storeId);
         if (exclude) filtersApplied.put("exclude_sold_out", true);
 
         SearchInfo searchInfo = new SearchInfo(
@@ -104,51 +97,9 @@ public class ProductService {
         return toDetailDto(product);
     }
 
-    @Transactional(readOnly = true)
-    public StoreProductListResponse getProductsByStoreId(Long storeId, Integer page, Integer limit, String status) {
-        Store store = storeRepository.findById(storeId)
-            .orElseThrow(() -> new StoreNotFoundException(storeId));
-
-        int safePage = page == null || page < 1 ? 1 : page;
-        int safeLimit = limit == null ? DEFAULT_LIMIT : Math.min(Math.max(limit, 1), MAX_LIMIT);
-
-        Specification<Product> spec = Specification
-            .where(ProductSpecs.storeId(storeId))
-            .and(ProductSpecs.status(status));
-
-        Pageable pageable = PageRequest.of(safePage - 1, safeLimit, Sort.by(Sort.Direction.DESC, "createdAt"));
-        var productPage = productRepository.findAll(spec, pageable);
-
-        List<ProductListDto> products = productPage.getContent().stream()
-            .map(this::toListDto)
-            .collect(Collectors.toList());
-
-        PaginationInfo pagination = new PaginationInfo(
-            productPage.getNumber() + 1,
-            productPage.getTotalPages(),
-            productPage.getTotalElements(),
-            productPage.getSize(),
-            productPage.hasNext(),
-            productPage.hasPrevious()
-        );
-
-        return new StoreProductListResponse(
-            new StoreSummaryDto(store.getId(), store.getName(), store.getDescription()),
-            products,
-            pagination
-        );
-    }
-
     private ProductListDto toListDto(Product p) {
-        Store store = p.getStore();
-        if (store == null && p.getStoreId() != null) {
-            store = storeRepository.findById(p.getStoreId()).orElse(null);
-        }
-        String storeName = store != null ? store.getName() : null;
         return new ProductListDto(
             p.getId(),
-            p.getStoreId(),
-            storeName,
             p.getName(),
             p.getDescription(),
             p.getPrice(),
@@ -160,17 +111,8 @@ public class ProductService {
     }
 
     private ProductDetailDto toDetailDto(Product p) {
-        Store store = p.getStore();
-        if (store == null) {
-            store = storeRepository.findById(p.getStoreId()).orElse(null);
-        }
-        String storeName = store != null ? store.getName() : null;
-        String storeDescription = store != null ? store.getDescription() : null;
         return new ProductDetailDto(
             p.getId(),
-            p.getStoreId(),
-            storeName,
-            storeDescription,
             p.getName(),
             p.getDescription(),
             p.getPrice(),

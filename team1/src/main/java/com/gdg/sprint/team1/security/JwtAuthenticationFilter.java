@@ -29,7 +29,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final List<String> PERMIT_PATHS = List.of(
         "/api/v1/auth/",
         "/api/v1/products",
-        "/api/v1/stores",
         "/swagger-ui",
         "/v3/api-docs",
         "/api-docs"

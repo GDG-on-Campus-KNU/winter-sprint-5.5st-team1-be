@@ -33,13 +33,6 @@ public class GlobalExceptionHandler {
             .body(ApiResponse.failure("PRODUCT_NOT_FOUND", "존재하지 않는 상품입니다."));
     }
 
-    @ExceptionHandler(StoreNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleStoreNotFound(StoreNotFoundException ex) {
-        return ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
-            .body(ApiResponse.failure("STORE_NOT_FOUND", "존재하지 않는 상점입니다."));
-    }
-
     // ===== 사용자 관련 예외 =====
 
     @ExceptionHandler(UserNotFoundException.class)

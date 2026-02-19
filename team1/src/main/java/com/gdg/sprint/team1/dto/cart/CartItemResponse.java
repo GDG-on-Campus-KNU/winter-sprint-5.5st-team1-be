@@ -8,8 +8,6 @@ public record CartItemResponse (
         String productName,
         BigDecimal productPrice,
         String productStatus,
-        Long storeId,
-        String storeName,
         Integer quantity,
         BigDecimal subtotal,
         Boolean isAvailable,

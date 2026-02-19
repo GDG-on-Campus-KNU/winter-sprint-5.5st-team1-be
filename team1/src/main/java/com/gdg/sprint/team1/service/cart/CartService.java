@@ -17,15 +17,13 @@ import com.gdg.sprint.team1.dto.cart.CartItemResponse;
 import com.gdg.sprint.team1.dto.cart.CartResponse;
 import com.gdg.sprint.team1.dto.cart.CartSummary;
 import com.gdg.sprint.team1.entity.Product;
-import com.gdg.sprint.team1.entity.Store;
 import com.gdg.sprint.team1.exception.AuthRequiredException;
 import com.gdg.sprint.team1.exception.CartItemNotFoundException;
 import com.gdg.sprint.team1.exception.InsufficientStockException;
 import com.gdg.sprint.team1.exception.ProductNotFoundException;
 import com.gdg.sprint.team1.repository.CartItemRepository;
-import com.gdg.sprint.team1.security.UserContextHolder;
 import com.gdg.sprint.team1.repository.ProductRepository;
-import com.gdg.sprint.team1.repository.StoreRepository;
+import com.gdg.sprint.team1.security.UserContextHolder;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +34,6 @@ public class CartService {
 
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
-    private final StoreRepository storeRepository;
 
     private Integer currentUserId() {
         Integer userId = UserContextHolder.getCurrentUserId();
@@ -69,7 +66,6 @@ public class CartService {
         Map<Long, Product> productMap = new HashMap<>();
         productRepository.findAllById(productIds)
             .forEach(product -> productMap.put(product.getId(), product));
-        Map<Long, Store> storeMap = loadStores(productMap);
 
         List<CartItemResponse> items = new ArrayList<>();
         int totalQuantity = 0;
@@ -93,8 +89,6 @@ public class CartService {
                 product != null ? product.getName() : null,
                 productPrice,
                 product != null ? product.getProductStatus() : null,
-                product != null ? product.getStoreId() : null,
-                toStoreName(product, storeMap),
                 quantity,
                 subtotal,
                 isAvailable,
@@ -205,24 +199,5 @@ public class CartService {
         return totalProductPrice.compareTo(FREE_DELIVERY_THRESHOLD) >= 0
             ? BigDecimal.ZERO
             : DEFAULT_DELIVERY_FEE;
-    }
-
-    private String toStoreName(Product product, Map<Long, Store> storeMap) {
-        if (product == null) return null;
-        if (product.getStore() != null) return product.getStore().getName();
-        if (product.getStoreId() == null) return null;
-        Store store = storeMap.get(product.getStoreId());
-        return store != null ? store.getName() : null;
-    }
-
-    private Map<Long, Store> loadStores(Map<Long, Product> productMap) {
-        List<Long> storeIds = productMap.values().stream()
-            .map(Product::getStoreId)
-            .filter(id -> id != null)
-            .distinct()
-            .collect(Collectors.toList());
-        if (storeIds.isEmpty()) return Map.of();
-        return storeRepository.findAllById(storeIds).stream()
-            .collect(Collectors.toMap(Store::getId, store -> store));
     }
 }

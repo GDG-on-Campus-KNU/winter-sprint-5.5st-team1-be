@@ -1,12 +1,3 @@
--- Stores 테이블 (소문자 테이블명: MySQL Linux 대소문자 이슈 방지)
-CREATE TABLE stores (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- Users 테이블
 -- 한 사용자는 여러 주문(Orders), 장바구니 항목(CartItems), 쿠폰 보유(UserCoupons)를 가질 수 있는 1:N 관계의 기준 엔티티입니다.
 -- 사용자 삭제 시 주문/결제 이력은 유지해야 하므로 Orders.user_id 는 ON DELETE RESTRICT 를 사용하고,
@@ -39,11 +30,8 @@ CREATE TABLE refresh_tokens (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Product 테이블
--- 한 상점(Stores)은 여러 상품(Products)을 가지는 1:N 관계입니다.
--- 상점이 삭제될 경우 기존 주문/상품 이력 보존을 위해 상품을 자동으로 지우지 않도록 ON DELETE RESTRICT 를 사용합니다.
 CREATE TABLE products (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    store_id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     price DECIMAL(10, 2) NOT NULL,
@@ -52,9 +40,6 @@ CREATE TABLE products (
     version BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    -- 특정 상점이 삭제되더라도 기존 상품/주문 이력은 보호해야 하므로 RESTRICT 로 상점 삭제를 막습니다.
-    FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE RESTRICT,
-    INDEX idx_store_id (store_id),
     INDEX idx_status (product_status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
