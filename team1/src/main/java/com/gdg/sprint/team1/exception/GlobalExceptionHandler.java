@@ -191,6 +191,13 @@ public class GlobalExceptionHandler {
             .body(ApiResponse.failure("INVALID_ARGUMENT", ex.getMessage()));
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalState(IllegalStateException ex) {
+        log.warn("잘못된 상태: {}", ex.getMessage());
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.failure("INVALID_STATE", ex.getMessage()));
+    }
     /**
      * Optimistic Lock 충돌 (동시성 문제)
      *
