@@ -216,26 +216,26 @@ public class OrderService {
 
         PriceCalculationResult priceResult = priceCalculationService.calculateTotal(priceItems, couponInfo);
 
-        Order order = new Order();
-        order.setUser(user);
-        order.setUserCoupon(userCoupon);
-        order.setTotalProductPrice(priceResult.totalProductPrice());
-        order.setDiscountAmount(priceResult.discountAmount());
-        order.setDeliveryFee(priceResult.deliveryFee());
-        order.setFinalPrice(priceResult.finalPrice());
-        order.setRecipientName(delivery.recipientName());
-        order.setRecipientPhone(delivery.recipientPhone());
-        order.setDeliveryAddress(delivery.deliveryAddress());
-        order.setDeliveryDetailAddress(delivery.deliveryDetailAddress());
-        order.setDeliveryMessage(delivery.deliveryMessage());
-        order.setOrderStatus(OrderStatus.PENDING);
+        Order order = Order.create(
+            user,
+            userCoupon,
+            priceResult.totalProductPrice(),
+            priceResult.discountAmount(),
+            priceResult.deliveryFee(),
+            priceResult.finalPrice(),
+            delivery.recipientName(),
+            delivery.recipientPhone(),
+            delivery.deliveryAddress(),
+            delivery.deliveryDetailAddress(),
+            delivery.deliveryMessage()
+        );
         orderRepository.save(order);
 
         for (OrderItemInput input : itemInputs) {
             Product product = productMap.get(input.productId());
             OrderItem orderItem = new OrderItem(order, product, input.quantity(), product.getPrice());
             order.addOrderItem(orderItem);
-            product.setStock(product.getStock() - input.quantity());
+            product.deductStock(input.quantity());
         }
 
         if (userCoupon != null) {
@@ -342,26 +342,24 @@ public class OrderService {
             throw new CannotCancelOrderException(currentStatus);
         }
 
-        // 4. 재고 복구
+        // 4. 재고 복구 (엔티티 책임)
         for (OrderItem orderItem : order.getOrderItems()) {
             Product product = orderItem.getProduct();
-            Integer currentStock = product.getStock();
-            Integer returnQuantity = orderItem.getQuantity();
-            product.setStock(currentStock + returnQuantity);
+            int returnQuantity = orderItem.getQuantity();
+            product.restoreStock(returnQuantity);
             log.debug("재고 복구: productId={}, 복구량={}, 새 재고={}",
                 product.getId(), returnQuantity, product.getStock());
         }
 
-        // 5. 쿠폰 복구
+        // 5. 쿠폰 복구 (엔티티 책임)
         UserCoupon userCoupon = order.getUserCoupon();
         if (userCoupon != null) {
-            userCoupon.setUsedAt(null);
+            userCoupon.restore();
             log.debug("쿠폰 복구: userCouponId={}", userCoupon.getId());
         }
 
-        // 6. 주문 상태 변경 및 취소 사유 저장
-        order.setOrderStatus(OrderStatus.CANCELLED);
-        order.setCancelReason(cancelReason);
+        // 6. 주문 상태 변경 및 취소 사유 저장 (엔티티 책임)
+        order.cancel(cancelReason);
 
         log.info("주문 취소 완료: orderId={}, userId={}, 환불액={}",
             orderId, userId, order.getFinalPrice());

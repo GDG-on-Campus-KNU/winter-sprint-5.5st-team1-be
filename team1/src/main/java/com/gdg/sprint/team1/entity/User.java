@@ -46,7 +46,28 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public User() {}
+    protected User() {}
+
+    /**
+     * 회원가입용 사용자 생성 (비즈니스 규칙: Role = USER 고정).
+     * setter 노출 대신 엔티티가 생성 책임을 가짐.
+     */
+    public static User create(
+        String email,
+        String encodedPassword,
+        String name,
+        String phone,
+        String address
+    ) {
+        User user = new User();
+        user.email = email;
+        user.password = encodedPassword;
+        user.name = name;
+        user.phone = phone;
+        user.address = address;
+        user.role = UserRole.USER;
+        return user;
+    }
 
     @PrePersist
     protected void onCreate() {

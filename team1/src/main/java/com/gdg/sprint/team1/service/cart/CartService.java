@@ -171,7 +171,7 @@ public class CartService {
                     stock
                 );
             }
-            item.setQuantity(quantity);
+            item.updateQuantity(quantity);
         }
     }
 

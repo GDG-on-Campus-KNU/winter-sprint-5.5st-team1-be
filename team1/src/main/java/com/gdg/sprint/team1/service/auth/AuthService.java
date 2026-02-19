@@ -14,7 +14,6 @@ import com.gdg.sprint.team1.dto.auth.LoginResponse;
 import com.gdg.sprint.team1.dto.auth.SignupRequest;
 import com.gdg.sprint.team1.entity.RefreshToken;
 import com.gdg.sprint.team1.entity.User;
-import com.gdg.sprint.team1.entity.User.UserRole;
 import com.gdg.sprint.team1.exception.DuplicateEmailException;
 import com.gdg.sprint.team1.exception.InvalidRefreshTokenException;
 import com.gdg.sprint.team1.exception.LoginFailedException;
@@ -40,13 +39,13 @@ public class AuthService {
             throw new DuplicateEmailException(request.email());
         }
 
-        User user = new User();
-        user.setEmail(request.email());
-        user.setPassword(passwordEncoder.encode(request.password()));
-        user.setName(request.name());
-        user.setPhone(request.phone());
-        user.setAddress(request.address());
-        user.setRole(UserRole.USER);
+        User user = User.create(
+            request.email(),
+            passwordEncoder.encode(request.password()),
+            request.name(),
+            request.phone(),
+            request.address()
+        );
         return userRepository.save(user);
     }
 

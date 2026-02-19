@@ -80,7 +80,46 @@ public class Order {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public Order() {} // ✅ protected → public 변경
+    protected Order() {}
+
+    /**
+     * 주문 생성 (비즈니스 규칙: 배송·금액·수령인 정보를 한 번에 설정).
+     * setter 노출 대신 엔티티가 생성 책임을 가짐.
+     */
+    public static Order create(
+        User user,
+        UserCoupon userCoupon,
+        BigDecimal totalProductPrice,
+        BigDecimal discountAmount,
+        BigDecimal deliveryFee,
+        BigDecimal finalPrice,
+        String recipientName,
+        String recipientPhone,
+        String deliveryAddress,
+        String deliveryDetailAddress,
+        String deliveryMessage
+    ) {
+        Order order = new Order();
+        order.user = user;
+        order.userCoupon = userCoupon;
+        order.totalProductPrice = totalProductPrice;
+        order.discountAmount = discountAmount != null ? discountAmount : BigDecimal.ZERO;
+        order.deliveryFee = deliveryFee != null ? deliveryFee : BigDecimal.ZERO;
+        order.finalPrice = finalPrice;
+        order.recipientName = recipientName;
+        order.recipientPhone = recipientPhone;
+        order.deliveryAddress = deliveryAddress;
+        order.deliveryDetailAddress = deliveryDetailAddress;
+        order.deliveryMessage = deliveryMessage;
+        order.orderStatus = OrderStatus.PENDING;
+        return order;
+    }
+
+    /** 주문 취소: 상태 및 취소 사유 변경을 엔티티 책임으로 처리 */
+    public void cancel(String cancelReason) {
+        this.orderStatus = OrderStatus.CANCELLED;
+        this.cancelReason = cancelReason;
+    }
 
     @PrePersist
     protected void onCreate() {

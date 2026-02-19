@@ -5,6 +5,8 @@ import java.time.Instant;
 
 import jakarta.persistence.*;
 
+import com.gdg.sprint.team1.exception.InsufficientStockException;
+
 @Entity
 @Table(name = "products")
 public class Product {
@@ -53,6 +55,21 @@ public class Product {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = Instant.now();
+    }
+
+    /** 재고 차감 (엔티티 책임: 음수 방지) */
+    public void deductStock(int quantity) {
+        int current = this.stock != null ? this.stock : 0;
+        if (current < quantity) {
+            throw new InsufficientStockException(getName(), quantity, current);
+        }
+        this.stock = current - quantity;
+    }
+
+    /** 재고 복구 (주문 취소 등) */
+    public void restoreStock(int quantity) {
+        int current = this.stock != null ? this.stock : 0;
+        this.stock = current + quantity;
     }
 
     public Long getId() { return id; }
