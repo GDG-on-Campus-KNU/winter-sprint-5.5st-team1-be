@@ -5,8 +5,6 @@ import java.time.Instant;
 
 public record ProductListDto(
     Long id,
-    Long storeId,
-    String storeName,
     String name,
     String description,
     BigDecimal price,
