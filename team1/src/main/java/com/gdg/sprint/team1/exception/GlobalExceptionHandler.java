@@ -43,6 +43,57 @@ public class GlobalExceptionHandler {
             .body(ApiResponse.failure("USER_NOT_FOUND", "존재하지 않는 사용자입니다."));
     }
 
+    // ===== 인증/권한 예외 =====
+
+    @ExceptionHandler(AuthRequiredException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthRequired(AuthRequiredException ex) {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(ApiResponse.failure("AUTH_REQUIRED", "인증이 필요합니다."));
+    }
+
+    @ExceptionHandler(AuthExpiredException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthExpired(AuthExpiredException ex) {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(ApiResponse.failure("AUTH_EXPIRED", "토큰이 만료되었습니다."));
+    }
+
+    @ExceptionHandler(AuthInvalidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthInvalid(AuthInvalidException ex) {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(ApiResponse.failure("AUTH_INVALID", "유효하지 않은 토큰입니다."));
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleForbidden(ForbiddenException ex) {
+        return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(ApiResponse.failure("FORBIDDEN", ex.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateEmail(DuplicateEmailException ex) {
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(ApiResponse.failure("DUPLICATE_EMAIL", ex.getMessage()));
+    }
+
+    @ExceptionHandler(LoginFailedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleLoginFailed(LoginFailedException ex) {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(ApiResponse.failure("LOGIN_FAILED", ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidRefreshToken(InvalidRefreshTokenException ex) {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(ApiResponse.failure("REFRESH_TOKEN_INVALID", ex.getMessage()));
+    }
+
     // ===== 주문 관련 예외 =====
 
     @ExceptionHandler(OrderNotFoundException.class)

@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,6 +20,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.gdg.sprint.team1.common.ApiResponse;
@@ -35,10 +35,11 @@ import com.gdg.sprint.team1.service.order.OrderService;
 
 @Tag(
     name = "주문 API",
-    description = "주문 생성, 조회, 취소 등 주문 관련 모든 기능을 제공합니다."
+    description = "주문 생성, 조회, 취소 등 주문 관련 모든 기능을 제공합니다. (JWT 인증 필요)"
 )
 @RestController
 @RequestMapping("/api/v1/orders")
+@SecurityRequirement(name = "bearerAuth")
 public class OrderController {
 
     private final OrderService orderService;
@@ -65,16 +66,7 @@ public class OrderController {
             - 쿠폰 사용 시 최소 주문 금액을 충족해야 합니다.
             - 주문 생성 시 재고가 자동으로 차감됩니다.
             """,
-        parameters = {
-            @Parameter(
-                name = "X-USER-ID",
-                description = "사용자 ID (Week 1에서는 헤더로 전달, Week 2부터 JWT 토큰 사용)",
-                required = true,
-                in = ParameterIn.HEADER,
-                example = "1",
-                schema = @Schema(type = "integer")
-            )
-        }
+        parameters = {}
     )
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -176,7 +168,6 @@ public class OrderController {
     })
     @PostMapping
     public ResponseEntity<ApiResponse<CreateOrderResponse>> createOrder(
-        @Parameter(hidden = true) @RequestHeader(value = "X-USER-ID") Integer userId,
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "주문 생성 요청 정보",
             required = true,
@@ -209,7 +200,7 @@ public class OrderController {
         )
         @Validated @RequestBody CreateOrderRequest request) {
 
-        CreateOrderResponse response = orderService.createOrder(userId, request);
+        CreateOrderResponse response = orderService.createOrder(request);
         return ResponseEntity
             .status(HttpStatus.CREATED)
             .body(ApiResponse.success(response, "주문이 생성되었습니다."));
@@ -233,16 +224,7 @@ public class OrderController {
             - 장바구니에 담긴 모든 상품을 한 번에 주문
             - 주문 완료 시 장바구니 자동 삭제
             """,
-        parameters = {
-            @Parameter(
-                name = "X-USER-ID",
-                description = "사용자 ID",
-                required = true,
-                in = ParameterIn.HEADER,
-                example = "1",
-                schema = @Schema(type = "integer")
-            )
-        }
+        parameters = {}
     )
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -270,7 +252,6 @@ public class OrderController {
     })
     @PostMapping("/from-cart")
     public ResponseEntity<ApiResponse<CreateOrderResponse>> createOrderFromCart(
-        @Parameter(hidden = true) @RequestHeader(value = "X-USER-ID") Integer userId,
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "배송지 정보만 입력 (상품은 장바구니에서 자동 조회)",
             required = true,
@@ -292,7 +273,7 @@ public class OrderController {
         )
         @Validated @RequestBody CreateOrderFromCartRequest request) {
 
-        CreateOrderResponse response = orderService.createOrderFromCart(userId, request);
+        CreateOrderResponse response = orderService.createOrderFromCart(request);
         return ResponseEntity
             .status(HttpStatus.CREATED)
             .body(ApiResponse.success(response, "주문이 생성되었습니다."));
@@ -316,13 +297,6 @@ public class OrderController {
             - CANCELLED: 주문 취소
             """,
         parameters = {
-            @Parameter(
-                name = "X-USER-ID",
-                description = "사용자 ID",
-                required = true,
-                in = ParameterIn.HEADER,
-                example = "1"
-            ),
             @Parameter(
                 name = "page",
                 description = "페이지 번호 (1부터 시작)",
@@ -382,8 +356,6 @@ public class OrderController {
     })
     @GetMapping
     public ResponseEntity<ApiResponse<Page<OrderResponse>>> getOrders(
-        @Parameter(hidden = true) @RequestHeader(value = "X-USER-ID") Integer userId,
-
         @Parameter(description = "페이지 번호 (기본값: 1)", example = "1")
         @RequestParam(required = false, defaultValue = "1") Integer page,  // ← 기본값 1
 
@@ -393,7 +365,7 @@ public class OrderController {
         @Parameter(description = "주문 상태 필터", example = "PENDING")
         @RequestParam(required = false) String status
     ) {
-        Page<OrderResponse> response = orderService.getOrders(userId, page, limit, status);
+        Page<OrderResponse> response = orderService.getOrders(page, limit, status);
         return ResponseEntity.ok(ApiResponse.success(response, "주문 목록 조회 성공"));
     }
 
@@ -412,13 +384,6 @@ public class OrderController {
             - 타인의 주문 조회 시 403 Forbidden
             """,
         parameters = {
-            @Parameter(
-                name = "X-USER-ID",
-                description = "사용자 ID",
-                required = true,
-                in = ParameterIn.HEADER,
-                example = "1"
-            ),
             @Parameter(
                 name = "order_id",
                 description = "주문 ID",
@@ -457,10 +422,9 @@ public class OrderController {
     })
     @GetMapping("/{order_id}")
     public ResponseEntity<ApiResponse<OrderDetailResponse>> getOrderDetail(
-        @Parameter(hidden = true) @RequestHeader(value = "X-USER-ID") Integer userId,
         @PathVariable("order_id") Integer orderId) {
 
-        OrderDetailResponse response = orderService.getOrderDetail(userId, orderId);
+        OrderDetailResponse response = orderService.getOrderDetail(orderId);
         return ResponseEntity.ok(ApiResponse.success(response, "주문 상세 조회 성공"));
     }
 
@@ -488,13 +452,6 @@ public class OrderController {
             - 본인의 주문만 취소 가능합니다.
             """,
         parameters = {
-            @Parameter(
-                name = "X-USER-ID",
-                description = "사용자 ID",
-                required = true,
-                in = ParameterIn.HEADER,
-                example = "1"
-            ),
             @Parameter(
                 name = "order_id",
                 description = "취소할 주문 ID",
@@ -569,7 +526,6 @@ public class OrderController {
     })
     @PatchMapping("/{order_id}/cancel")
     public ResponseEntity<ApiResponse<CancelOrderResponse>> cancelOrder(
-        @Parameter(hidden = true) @RequestHeader(value = "X-USER-ID") Integer userId,
         @PathVariable("order_id") Integer orderId,
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "취소 사유 (선택)",
@@ -586,7 +542,6 @@ public class OrderController {
         @Validated @RequestBody CancelOrderRequest request) {
 
         CancelOrderResponse response = orderService.cancelOrder(
-            userId,
             orderId,
             request.cancelReason()
         );

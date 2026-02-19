@@ -9,11 +9,12 @@ VALUES
     (1, '강남 카페', '스페셜티 커피와 디저트를 판매하는 카페'),
     (2, '홍대 피자샵', '수제 피자와 사이드를 판매하는 매장');
 
--- 사용자 2명
-INSERT INTO users (id, email, password, name, phone, address)
+-- 사용자 3명 (목업, 평문 비밀번호. 회원가입 사용자만 BCrypt)
+INSERT INTO users (id, email, password, name, phone, address, role)
 VALUES
-    (1, 'alice@example.com', 'password123', 'Alice', '010-1111-2222', '서울특별시 강남구 테헤란로 123'),
-    (2, 'bob@example.com',   'password123', 'Bob',   '010-3333-4444', '서울특별시 마포구 와우산로 45');
+    (1, 'dev1@gdg.com', 'dev123', 'Dev1', '010-1111-1111', '서울시 강남구', 'USER'),
+    (2, 'dev2@gdg.com', 'dev123', 'Dev2', '010-2222-2222', '서울시 마포구', 'USER'),
+    (3, 'dev3@gdg.com', 'dev123', 'Dev3', '010-3333-3333', '서울시 서초구', 'USER');
 
 -- 상품 10개 이상 (강남 카페 6개, 홍대 피자샵 6개)
 INSERT INTO products (id, store_id, name, description, price, stock, product_status)
@@ -31,7 +32,7 @@ VALUES
     (10, 2, '고르곤졸라 피자',  '꿀과 함께 먹는 고르곤졸라 치즈 피자',              19000, 25, 'ACTIVE'),
     (11, 2, '갈릭 디핑 소스',   '피자와 함께 먹는 마늘 디핑 소스',                  1500,  200,'ACTIVE'),
     (12, 2, '콜라 500ml',       '탄산음료 콜라 500ml',                              2000,  150,'ACTIVE');
-
+w
 -- 쿠폰 2개 (정률, 정액)
 INSERT INTO coupons (id, name, min_order_price, coupon_type, discount_value, description, coupon_status, valid_days)
 VALUES
@@ -59,8 +60,8 @@ INSERT INTO orders (id, user_id, user_coupon_id, total_product_price, discount_a
                     recipient_name, recipient_phone, delivery_address, delivery_detail_address, delivery_message,
                     order_status, cancel_reason, created_at, updated_at) -- cancel_reason 추가
 VALUES
-    (1, 1, 2, 15500.00, 2000.00, 0, 13500.00, 'Alice', '010-1111-2222', '주소', '상세주소', '메시지', 'PENDING', NULL, NOW(), NOW()),
-    (2, 2, NULL, 22000.00, 0, 3000.00, 25000.00, 'Bob', '010-3333-4444', '주소', NULL, NULL, 'DELIVERED', NULL, NOW(), NOW());
+    (1, 1, 2, 15500.00, 2000.00, 0, 13500.00, 'Dev1', '010-1111-1111', '주소', '상세주소', '메시지', 'PENDING', NULL, NOW(), NOW()),
+    (2, 2, NULL, 22000.00, 0, 3000.00, 25000.00, 'Dev2', '010-2222-2222', '주소', NULL, NULL, 'DELIVERED', NULL, NOW(), NOW());
 
 INSERT INTO order_items (product_id, order_id, quantity, unit_price, created_at)
 VALUES

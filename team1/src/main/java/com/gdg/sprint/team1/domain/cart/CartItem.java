@@ -27,7 +27,7 @@ public class CartItem {
 
     protected CartItem() {}
 
-    public CartItem(Integer userId, Integer productId, Integer quantity) {
+    public CartItem(Integer userId, Long productId, Integer quantity) {
         this.id = new CartItemId(userId, productId);
         setQuantity(quantity);
     }

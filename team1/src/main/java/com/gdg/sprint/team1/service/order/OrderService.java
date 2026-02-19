@@ -41,7 +41,9 @@ import com.gdg.sprint.team1.exception.OrderNotFoundException;
 import com.gdg.sprint.team1.exception.ProductNotFoundException;
 import com.gdg.sprint.team1.exception.UnauthorizedOrderAccessException;
 import com.gdg.sprint.team1.exception.UserNotFoundException;
+import com.gdg.sprint.team1.exception.AuthRequiredException;
 import com.gdg.sprint.team1.repository.CartItemRepository;
+import com.gdg.sprint.team1.security.UserContextHolder;
 import com.gdg.sprint.team1.repository.OrderRepository;
 import com.gdg.sprint.team1.repository.ProductRepository;
 import com.gdg.sprint.team1.repository.UserCouponRepository;
@@ -86,6 +88,14 @@ public class OrderService {
         this.priceCalculationService = priceCalculationService;
     }
 
+    private Integer currentUserId() {
+        Integer userId = UserContextHolder.getCurrentUserId();
+        if (userId == null) {
+            throw new AuthRequiredException();
+        }
+        return userId;
+    }
+
     /**
      * 주문 생성 (직접 상품 목록 입력)
      *
@@ -95,7 +105,8 @@ public class OrderService {
      * - 클라이언트에서 에러 처리 및 재시도 필요
      */
     @Transactional
-    public CreateOrderResponse createOrder(Integer userId, CreateOrderRequest request) {
+    public CreateOrderResponse createOrder(CreateOrderRequest request) {
+        Integer userId = currentUserId();
         log.debug("주문 생성 시작: userId={}", userId);
 
         // 1. 사용자 조회
@@ -223,7 +234,8 @@ public class OrderService {
      * 동시성 제어: Optimistic Lock 적용
      */
     @Transactional
-    public CreateOrderResponse createOrderFromCart(Integer userId, CreateOrderFromCartRequest request) {
+    public CreateOrderResponse createOrderFromCart(CreateOrderFromCartRequest request) {
+        Integer userId = currentUserId();
         log.debug("장바구니 기반 주문 생성 시작: userId={}", userId);
 
         // 1. 사용자 조회
@@ -237,24 +249,22 @@ public class OrderService {
         }
 
         // 3. 상품 조회 및 재고 확인
-        List<Integer> productIds = cartItems.stream()
+        List<Long> productIds = cartItems.stream()
             .map(item -> item.getId().getProductId())
             .collect(Collectors.toList());
 
-        Map<Integer, Product> productMap = new HashMap<>();
-        productRepository.findAllById(productIds.stream()
-                .map(Integer::longValue)
-                .collect(Collectors.toList()))
-            .forEach(product -> productMap.put(product.getId().intValue(), product));
+        Map<Long, Product> productMap = new HashMap<>();
+        productRepository.findAllById(productIds)
+            .forEach(product -> productMap.put(product.getId(), product));
 
         // 4. 재고 확인 및 PriceItem 목록 생성
         List<PriceItem> priceItems = new ArrayList<>();
         for (CartItem cartItem : cartItems) {
-            Integer productId = cartItem.getId().getProductId();
+            Long productId = cartItem.getId().getProductId();
             Product product = productMap.get(productId);
 
             if (product == null) {
-                throw new ProductNotFoundException(productId.longValue());
+                throw new ProductNotFoundException(productId);
             }
 
             // 재고 확인
@@ -352,7 +362,8 @@ public class OrderService {
      * 주문 목록 조회
      */
     @Transactional(readOnly = true)
-    public Page<OrderResponse> getOrders(Integer userId, Integer page, Integer limit, String status) {
+    public Page<OrderResponse> getOrders(Integer page, Integer limit, String status) {
+        Integer userId = currentUserId();
         // 페이지네이션 상한선 적용 (최대 100개)
         int safePage = page != null && page >= 1 ? page : 1;
         int safeLimit = limit != null && limit >= 1 ? Math.min(limit, 100) : 10;
@@ -385,7 +396,8 @@ public class OrderService {
      * 주문 상세 조회
      */
     @Transactional(readOnly = true)
-    public OrderDetailResponse getOrderDetail(Integer userId, Integer orderId) {
+    public OrderDetailResponse getOrderDetail(Integer orderId) {
+        Integer userId = currentUserId();
         log.debug("주문 상세 조회: userId={}, orderId={}", userId, orderId);
 
         Order order = orderRepository.findByIdWithDetails(orderId)
@@ -412,7 +424,8 @@ public class OrderService {
      * 6. 취소 사유 저장
      */
     @Transactional
-    public CancelOrderResponse cancelOrder(Integer userId, Integer orderId, String cancelReason) {
+    public CancelOrderResponse cancelOrder(Integer orderId, String cancelReason) {
+        Integer userId = currentUserId();
         log.debug("주문 취소 시작: userId={}, orderId={}", userId, orderId);
 
         // 1. 주문 조회 (JOIN FETCH로 OrderItem, UserCoupon 함께 조회)

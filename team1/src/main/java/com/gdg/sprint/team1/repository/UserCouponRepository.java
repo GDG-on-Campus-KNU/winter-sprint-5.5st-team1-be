@@ -12,4 +12,7 @@ public interface UserCouponRepository extends JpaRepository<UserCoupon, Integer>
 
     @Query("SELECT uc FROM UserCoupon uc JOIN FETCH uc.coupon WHERE uc.user.id = :userId AND uc.usedAt IS NULL AND uc.expiredAt > CURRENT_TIMESTAMP")
     List<UserCoupon> findAvailableCouponsByUserId(@Param("userId") Integer userId);
+
+    @Query("SELECT uc FROM UserCoupon uc JOIN FETCH uc.coupon WHERE uc.user.id = :userId ORDER BY uc.issuedAt DESC")
+    List<UserCoupon> findAllByUserId(@Param("userId") Integer userId);
 }

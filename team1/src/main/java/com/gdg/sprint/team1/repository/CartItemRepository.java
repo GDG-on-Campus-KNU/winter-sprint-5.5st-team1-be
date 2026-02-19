@@ -15,9 +15,9 @@ public interface CartItemRepository extends JpaRepository<CartItem, CartItemId> 
 
     List<CartItem> findAllByIdUserId(Integer userId);
 
-    Optional<CartItem> findByIdUserIdAndIdProductId(Integer userId, Integer productId);
+    Optional<CartItem> findByIdUserIdAndIdProductId(Integer userId, Long productId);
 
-    void deleteByIdUserIdAndIdProductId(Integer userId, Integer productId);
+    void deleteByIdUserIdAndIdProductId(Integer userId, Long productId);
 
     @Modifying
     @Query("""
@@ -27,11 +27,11 @@ public interface CartItemRepository extends JpaRepository<CartItem, CartItemId> 
           and c.quantity + :quantity >= 1
         """)
     int incrementQuantity(@Param("userId") Integer userId,
-                          @Param("productId") Integer productId,
+                          @Param("productId") Long productId,
                           @Param("quantity") Integer quantity);
 
     @Modifying
     @Query("delete from CartItem c where c.id.userId = :userId and c.id.productId in :productIds")
-    void deleteByUserIdAndProductIds(@Param("userId") Integer userId, @Param("productIds") List<Integer> productIds);
+    void deleteByUserIdAndProductIds(@Param("userId") Integer userId, @Param("productIds") List<Long> productIds);
 
 }
