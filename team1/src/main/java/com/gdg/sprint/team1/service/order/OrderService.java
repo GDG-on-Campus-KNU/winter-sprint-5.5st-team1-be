@@ -9,6 +9,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -61,6 +63,7 @@ import com.gdg.sprint.team1.service.pricing.PriceItem;
  * - 클라이언트에서 재시도 처리 권장
  */
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
@@ -71,20 +74,6 @@ public class OrderService {
     private final UserCouponRepository userCouponRepository;
     private final CartItemRepository cartItemRepository;
     private final PriceCalculationService priceCalculationService;
-
-    public OrderService(OrderRepository orderRepository,
-        ProductRepository productRepository,
-        UserRepository userRepository,
-        UserCouponRepository userCouponRepository,
-        CartItemRepository cartItemRepository,
-        PriceCalculationService priceCalculationService) {
-        this.orderRepository = orderRepository;
-        this.productRepository = productRepository;
-        this.userRepository = userRepository;
-        this.userCouponRepository = userCouponRepository;
-        this.cartItemRepository = cartItemRepository;
-        this.priceCalculationService = priceCalculationService;
-    }
 
     private Integer currentUserId() {
         Integer userId = UserContextHolder.getCurrentUserId();

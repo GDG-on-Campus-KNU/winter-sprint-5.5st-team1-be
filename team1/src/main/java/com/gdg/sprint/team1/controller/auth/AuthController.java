@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
+
 import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.dto.auth.LoginRequest;
 import com.gdg.sprint.team1.dto.auth.LoginResponse;
@@ -22,13 +24,10 @@ import jakarta.validation.Valid;
 @Tag(name = "인증 API", description = "회원가입, 로그인")
 @RestController
 @RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
-
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
 
     @PostMapping("/signup")
     @Operation(summary = "회원가입", description = "이메일 중복 검증, 비밀번호 BCrypt 해싱, 기본 Role = USER")

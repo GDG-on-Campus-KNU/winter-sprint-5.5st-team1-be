@@ -6,6 +6,8 @@ import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
+
 import com.gdg.sprint.team1.dto.auth.UserMeResponse;
 import com.gdg.sprint.team1.dto.my.MyCouponResponse;
 import com.gdg.sprint.team1.entity.UserCoupon;
@@ -15,15 +17,11 @@ import com.gdg.sprint.team1.security.UserContextHolder;
 import com.gdg.sprint.team1.service.auth.AuthService;
 
 @Service
+@RequiredArgsConstructor
 public class MyPageService {
 
     private final AuthService authService;
     private final UserCouponRepository userCouponRepository;
-
-    public MyPageService(AuthService authService, UserCouponRepository userCouponRepository) {
-        this.authService = authService;
-        this.userCouponRepository = userCouponRepository;
-    }
 
     private Integer currentUserId() {
         Integer userId = UserContextHolder.getCurrentUserId();

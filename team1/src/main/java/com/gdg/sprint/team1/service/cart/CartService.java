@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
+
 import com.gdg.sprint.team1.domain.cart.CartItem;
 import com.gdg.sprint.team1.dto.cart.CartItemResponse;
 import com.gdg.sprint.team1.dto.cart.CartResponse;
@@ -26,6 +28,7 @@ import com.gdg.sprint.team1.repository.ProductRepository;
 import com.gdg.sprint.team1.repository.StoreRepository;
 
 @Service
+@RequiredArgsConstructor
 public class CartService {
 
     private static final BigDecimal FREE_DELIVERY_THRESHOLD = new BigDecimal("30000");
@@ -34,14 +37,6 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
-
-    public CartService(CartItemRepository cartItemRepository,
-                       ProductRepository productRepository,
-                       StoreRepository storeRepository) {
-        this.cartItemRepository = cartItemRepository;
-        this.productRepository = productRepository;
-        this.storeRepository = storeRepository;
-    }
 
     private Integer currentUserId() {
         Integer userId = UserContextHolder.getCurrentUserId();

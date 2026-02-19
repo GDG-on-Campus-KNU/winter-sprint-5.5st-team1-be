@@ -18,6 +18,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
+
 import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.dto.cart.AddCartItemRequest;
 import com.gdg.sprint.team1.dto.cart.CartResponse;
@@ -30,13 +32,10 @@ import com.gdg.sprint.team1.service.cart.CartService;
 @RequestMapping("/api/v1/cart")
 @SecurityRequirement(name = "bearerAuth")
 @Validated
+@RequiredArgsConstructor
 public class CartController {
 
     private final CartService cartService;
-
-    public CartController(CartService cartService) {
-        this.cartService = cartService;
-    }
 
     @GetMapping
     @Operation(summary = "장바구니 조회", description = "JWT 인증 사용자 기준 장바구니 목록과 요약 정보를 조회합니다.")

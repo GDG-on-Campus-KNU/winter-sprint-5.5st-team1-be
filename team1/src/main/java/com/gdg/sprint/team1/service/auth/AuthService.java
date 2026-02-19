@@ -6,6 +6,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
+
 import com.gdg.sprint.team1.config.JwtProperties;
 import com.gdg.sprint.team1.dto.auth.LoginRequest;
 import com.gdg.sprint.team1.dto.auth.LoginResponse;
@@ -23,6 +25,7 @@ import com.gdg.sprint.team1.security.JwtTokenProvider;
 import com.gdg.sprint.team1.security.JwtTokenProvider.TokenPayload;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -30,18 +33,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtProperties jwtProperties;
-
-    public AuthService(UserRepository userRepository,
-                       RefreshTokenRepository refreshTokenRepository,
-                       PasswordEncoder passwordEncoder,
-                       JwtTokenProvider jwtTokenProvider,
-                       JwtProperties jwtProperties) {
-        this.userRepository = userRepository;
-        this.refreshTokenRepository = refreshTokenRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.jwtProperties = jwtProperties;
-    }
 
     @Transactional
     public User signup(SignupRequest request) {

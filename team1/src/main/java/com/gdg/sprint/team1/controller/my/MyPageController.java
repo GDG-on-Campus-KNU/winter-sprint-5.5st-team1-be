@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
+
 import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.dto.auth.UserMeResponse;
 import com.gdg.sprint.team1.dto.my.MyCouponResponse;
@@ -22,13 +24,10 @@ import com.gdg.sprint.team1.service.my.MyPageService;
 @Tag(name = "마이페이지 API", description = "내 정보·쿠폰 조회")
 @RestController
 @RequestMapping("/api/v1/my")
+@RequiredArgsConstructor
 public class MyPageController {
 
     private final MyPageService myPageService;
-
-    public MyPageController(MyPageService myPageService) {
-        this.myPageService = myPageService;
-    }
 
     @GetMapping("/info")
     @Operation(summary = "내 정보", description = "JWT에서 추출한 사용자 정보 반환 (인증 여부 확인용)",

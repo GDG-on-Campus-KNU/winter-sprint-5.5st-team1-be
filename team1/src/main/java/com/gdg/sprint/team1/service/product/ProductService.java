@@ -13,6 +13,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
+
 import com.gdg.sprint.team1.dto.product.*;
 import com.gdg.sprint.team1.entity.Product;
 import com.gdg.sprint.team1.entity.Store;
@@ -23,6 +25,7 @@ import com.gdg.sprint.team1.repository.ProductSpecs;
 import com.gdg.sprint.team1.repository.StoreRepository;
 
 @Service
+@RequiredArgsConstructor
 public class ProductService {
 
     private static final int DEFAULT_LIMIT = 20;
@@ -32,11 +35,6 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
-
-    public ProductService(ProductRepository productRepository, StoreRepository storeRepository) {
-        this.productRepository = productRepository;
-        this.storeRepository = storeRepository;
-    }
 
     @Transactional(readOnly = true)
     public ProductListResponse getProductList(

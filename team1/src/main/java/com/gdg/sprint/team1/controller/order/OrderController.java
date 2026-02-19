@@ -26,6 +26,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
+
 import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.dto.order.CancelOrderRequest;
 import com.gdg.sprint.team1.dto.order.CancelOrderResponse;
@@ -44,13 +46,10 @@ import com.gdg.sprint.team1.service.order.OrderService;
 @RequestMapping("/api/v1/orders")
 @SecurityRequirement(name = "bearerAuth")
 @Validated
+@RequiredArgsConstructor
 public class OrderController {
 
     private final OrderService orderService;
-
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
 
     @Operation(
         summary = "주문 생성 (직접 입력)",

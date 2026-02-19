@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
+
 import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.dto.product.*;
 import com.gdg.sprint.team1.service.product.ProductService;
@@ -16,13 +18,10 @@ import com.gdg.sprint.team1.service.product.ProductService;
 @Tag(name = "메뉴(상품) API", description = "메뉴(상품) 목록·상세·상점별 조회 API")
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class ProductController {
 
     private final ProductService productService;
-
-    public ProductController(ProductService productService) {
-        this.productService = productService;
-    }
 
     @Operation(
         summary = "상품 목록 조회",
