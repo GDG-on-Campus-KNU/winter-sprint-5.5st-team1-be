@@ -199,10 +199,6 @@ public class CartService {
             : BigDecimal.valueOf(3000);
     }
 
-    private String toStoreName(Product product) {
-        return toStoreName(product, Map.of());
-    }
-
     private String toStoreName(Product product, Map<Long, Store> storeMap) {
         if (product == null) return null;
         if (product.getStore() != null) return product.getStore().getName();

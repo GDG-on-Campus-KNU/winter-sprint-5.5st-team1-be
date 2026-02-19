@@ -237,6 +237,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("잘못된 인자: {}", ex.getMessage(), ex);
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(ApiResponse.failure("INVALID_ARGUMENT", ex.getMessage()));
