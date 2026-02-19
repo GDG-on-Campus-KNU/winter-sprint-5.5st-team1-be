@@ -77,7 +77,7 @@ public record CreateOrderResponse(
 
         List<OrderItemResponse> items = order.getOrderItems().stream()
             .map(OrderItemResponse::from)
-            .collect(Collectors.toList());
+            .toList();
 
         CouponResponse couponResponse = null;
         if (order.getUserCoupon() != null) {

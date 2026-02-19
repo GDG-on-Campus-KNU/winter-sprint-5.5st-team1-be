@@ -93,7 +93,7 @@ public record OrderDetailResponse(
 
         List<OrderItemResponse> items = order.getOrderItems().stream()
             .map(OrderItemResponse::from)
-            .collect(Collectors.toList());
+            .toList();
 
         CouponResponse couponResponse = null;
         if (order.getUserCoupon() != null) {

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,7 +150,7 @@ public class OrderService {
         // 9. 장바구니 비우기
         List<Integer> productIds = cartItems.stream()
             .map(item -> item.getId().getProductId())
-            .collect(Collectors.toList());
+            .toList();
         cartItemRepository.deleteByUserIdAndProductIds(userId, productIds);
 
         log.info("장바구니 기반 주문 생성 완료: orderId={}, userId={}, finalPrice={}",
@@ -267,7 +266,7 @@ public class OrderService {
         Map<Integer, Product> productMap = new HashMap<>();
         productRepository.findAllById(productIds.stream()
                 .map(Integer::longValue)
-                .collect(Collectors.toList()))
+                .toList())
             .forEach(product -> productMap.put(product.getId().intValue(), product));
 
         List<PriceItem> priceItems = new ArrayList<>();
@@ -303,7 +302,7 @@ public class OrderService {
         Map<Integer, Product> productMap = new HashMap<>();
         productRepository.findAllById(productIds.stream()
                 .map(Integer::longValue)
-                .collect(Collectors.toList()))
+                .toList())
             .forEach(product -> productMap.put(product.getId().intValue(), product));
 
         List<PriceItem> priceItems = new ArrayList<>();
@@ -383,7 +382,7 @@ public class OrderService {
         Map<Integer, Product> productMap = new HashMap<>();
         productRepository.findAllById(productIds.stream()
                 .map(Integer::longValue)
-                .collect(Collectors.toList()))
+                .toList())
             .forEach(product -> productMap.put(product.getId().intValue(), product));
 
         for (CreateOrderRequest.OrderItemRequest item : items) {
@@ -402,12 +401,12 @@ public class OrderService {
     private void createOrderItemsFromCartAndDeductStock(Order order, List<CartItem> cartItems) {
         List<Integer> productIds = cartItems.stream()
             .map(item -> item.getId().getProductId())
-            .collect(Collectors.toList());
+            .toList();
 
         Map<Integer, Product> productMap = new HashMap<>();
         productRepository.findAllById(productIds.stream()
                 .map(Integer::longValue)
-                .collect(Collectors.toList()))
+                .toList())
             .forEach(product -> productMap.put(product.getId().intValue(), product));
 
         for (CartItem cartItem : cartItems) {
