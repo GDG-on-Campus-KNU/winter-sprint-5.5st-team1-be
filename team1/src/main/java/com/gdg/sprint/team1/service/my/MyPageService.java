@@ -3,27 +3,25 @@ package com.gdg.sprint.team1.service.my;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gdg.sprint.team1.dto.auth.UserMeResponse;
 import com.gdg.sprint.team1.dto.my.MyCouponResponse;
-import com.gdg.sprint.team1.dto.order.OrderDetailResponse;
-import com.gdg.sprint.team1.dto.order.OrderResponse;
 import com.gdg.sprint.team1.entity.UserCoupon;
 import com.gdg.sprint.team1.exception.AuthRequiredException;
 import com.gdg.sprint.team1.repository.UserCouponRepository;
 import com.gdg.sprint.team1.security.UserContextHolder;
-import com.gdg.sprint.team1.service.order.OrderService;
+import com.gdg.sprint.team1.service.auth.AuthService;
 
 @Service
 public class MyPageService {
 
-    private final OrderService orderService;
+    private final AuthService authService;
     private final UserCouponRepository userCouponRepository;
 
-    public MyPageService(OrderService orderService, UserCouponRepository userCouponRepository) {
-        this.orderService = orderService;
+    public MyPageService(AuthService authService, UserCouponRepository userCouponRepository) {
+        this.authService = authService;
         this.userCouponRepository = userCouponRepository;
     }
 
@@ -35,14 +33,9 @@ public class MyPageService {
         return userId;
     }
 
-    @Transactional(readOnly = true)
-    public Page<OrderResponse> getMyOrders(Integer page, Integer limit, String status) {
-        return orderService.getOrders(page, limit, status);
-    }
-
-    @Transactional(readOnly = true)
-    public OrderDetailResponse getMyOrderDetail(Integer orderId) {
-        return orderService.getOrderDetail(orderId);
+    public UserMeResponse getMyInfo() {
+        Integer userId = currentUserId();
+        return UserMeResponse.from(authService.getCurrentUser(userId));
     }
 
     /**

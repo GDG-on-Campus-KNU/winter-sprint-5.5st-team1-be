@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.gdg.sprint.team1.entity.User;
 
-@Schema(description = "내 정보 응답 (GET /users/me)")
+@Schema(description = "내 정보 응답 (GET /my/info)")
 public record UserMeResponse(
 
     @Schema(description = "사용자 ID")
