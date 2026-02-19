@@ -13,20 +13,20 @@ public class CartItemId implements Serializable {
     private Integer userId;
 
     @Column(name = "product_id")
-    private Integer productId;
+    private Long productId;
 
     protected CartItemId() {}
 
-    public CartItemId(Integer userId, Integer productId) {
+    public CartItemId(Integer userId, Long productId) {
         this.userId = userId;
         this.productId = productId;
     }
 
     public Integer getUserId() { return userId; }
-    public Integer getProductId() { return productId; }
+    public Long getProductId() { return productId; }
 
     protected void setUserId(Integer userId) { this.userId = userId; }
-    protected void setProductId(Integer productId) { this.productId = productId; }
+    protected void setProductId(Long productId) { this.productId = productId; }
 
     @Override
     public boolean equals(Object o) {

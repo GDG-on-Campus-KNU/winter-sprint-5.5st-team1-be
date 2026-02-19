@@ -2,9 +2,9 @@ package com.gdg.sprint.team1.dto.order;
 
 import java.math.BigDecimal;
 
-import com.gdg.sprint.team1.entity.UserCoupon;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import com.gdg.sprint.team1.entity.UserCoupon;
 
 @Schema(description = "적용된 쿠폰 정보")
 public record CouponResponse(

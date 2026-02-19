@@ -1,6 +1,7 @@
 package com.gdg.sprint.team1.common;
 
 import java.time.Instant;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -26,10 +27,27 @@ public record ApiResponse<T>(
             false,
             null,
             null,
-            new ErrorDetail(code, message),
+            new ErrorDetail(code, message, null),
             Instant.now().toString()
         );
     }
 
-    public record ErrorDetail(String code, String message) {}
+    public static <T> ApiResponse<T> failure(String code, String message, List<FieldErrorEntry> fieldErrors) {
+        return new ApiResponse<>(
+            false,
+            null,
+            null,
+            new ErrorDetail(code, message, fieldErrors),
+            Instant.now().toString()
+        );
+    }
+
+    public record ErrorDetail(String code, String message, List<FieldErrorEntry> fieldErrors) {
+
+        public ErrorDetail(String code, String message) {
+            this(code, message, null);
+        }
+    }
+
+    public record FieldErrorEntry(String field, String message) {}
 }

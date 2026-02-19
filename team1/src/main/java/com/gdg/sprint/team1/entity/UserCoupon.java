@@ -39,12 +39,14 @@ public class UserCoupon {
 
     protected UserCoupon() {}
 
-    // 쿠폰 사용 처리
     public void use() {
         this.usedAt = LocalDateTime.now();
     }
 
-    // 쿠폰 사용 가능 여부 확인
+    public void restore() {
+        this.usedAt = null;
+    }
+
     public boolean isUsable() {
         LocalDateTime now = LocalDateTime.now();
         return usedAt == null && expiredAt.isAfter(now);

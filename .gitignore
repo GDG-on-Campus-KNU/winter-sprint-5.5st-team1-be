@@ -28,6 +28,7 @@ env/
 # Build & Output
 dist/
 build/
+bin/
 target/
 out/
 *.class

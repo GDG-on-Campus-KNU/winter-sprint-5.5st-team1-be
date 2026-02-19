@@ -3,8 +3,6 @@ package com.gdg.sprint.team1.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.gdg.sprint.team1.domain.order.OrderItemId;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -14,6 +12,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+
+import com.gdg.sprint.team1.domain.order.OrderItemId;
 
 @Entity
 @Table(name = "order_items")

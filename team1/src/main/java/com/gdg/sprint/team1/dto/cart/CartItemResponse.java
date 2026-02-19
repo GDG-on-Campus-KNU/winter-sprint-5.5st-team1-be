@@ -4,12 +4,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record CartItemResponse (
-        Integer productId,
+        Long productId,
         String productName,
         BigDecimal productPrice,
         String productStatus,
-        Long storeId,
-        String storeName,
         Integer quantity,
         BigDecimal subtotal,
         Boolean isAvailable,
