@@ -185,7 +185,7 @@ public class CartService {
         Integer userId = currentUserId();
         if (productIds == null || productIds.isEmpty()) return;
         List<Long> productIdLongs = productIds.stream().map(Integer::longValue).collect(Collectors.toList());
-        cartItemRepository.deleteByUserIdAndProductIds(userId, productIdLongs);
+        cartItemRepository.deleteById_UserIdAndId_ProductIdIn(userId, productIdLongs);
     }
 
     @Transactional

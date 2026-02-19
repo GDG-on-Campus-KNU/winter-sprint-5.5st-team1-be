@@ -161,7 +161,7 @@ public class OrderService {
         List<Long> productIds = cartItems.stream()
             .map(c -> c.getId().getProductId())
             .toList();
-        cartItemRepository.deleteByUserIdAndProductIds(userId, productIds);
+        cartItemRepository.deleteById_UserIdAndId_ProductIdIn(userId, productIds);
 
         log.info("장바구니 기반 주문 생성 완료: orderId={}, userId={}, finalPrice={}",
             order.getId(), userId, order.getFinalPrice());
@@ -308,7 +308,7 @@ public class OrderService {
         Integer userId = currentUserId();
         log.debug("주문 상세 조회: userId={}, orderId={}", userId, orderId);
 
-        Order order = orderRepository.findByIdWithDetails(orderId)
+        Order order = orderRepository.findWithDetailsById(orderId)
             .orElseThrow(() -> new OrderNotFoundException(orderId));
 
         // 본인의 주문만 조회 가능
@@ -337,7 +337,7 @@ public class OrderService {
         log.debug("주문 취소 시작: userId={}, orderId={}", userId, orderId);
 
         // 1. 주문 조회 (JOIN FETCH로 OrderItem, UserCoupon 함께 조회)
-        Order order = orderRepository.findByIdWithDetails(orderId)
+        Order order = orderRepository.findWithDetailsById(orderId)
             .orElseThrow(() -> new OrderNotFoundException(orderId));
 
         // 2. 본인 확인

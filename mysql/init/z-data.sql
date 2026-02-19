@@ -32,7 +32,7 @@ VALUES
     (10, 2, '고르곤졸라 피자',  '꿀과 함께 먹는 고르곤졸라 치즈 피자',              19000, 25, 'ACTIVE'),
     (11, 2, '갈릭 디핑 소스',   '피자와 함께 먹는 마늘 디핑 소스',                  1500,  200,'ACTIVE'),
     (12, 2, '콜라 500ml',       '탄산음료 콜라 500ml',                              2000,  150,'ACTIVE');
-w
+
 -- 쿠폰 2개 (정률, 정액)
 INSERT INTO coupons (id, name, min_order_price, coupon_type, discount_value, description, coupon_status, valid_days)
 VALUES

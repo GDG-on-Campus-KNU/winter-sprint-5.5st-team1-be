@@ -51,7 +51,7 @@ public class MyPageService {
     @Transactional(readOnly = true)
     public List<MyCouponResponse> getMyCoupons(String status) {
         Integer userId = currentUserId();
-        List<UserCoupon> list = userCouponRepository.findAllByUserId(userId);
+        List<UserCoupon> list = userCouponRepository.findByUser_IdOrderByIssuedAtDesc(userId);
         Stream<UserCoupon> stream = list.stream();
         if ("AVAILABLE".equalsIgnoreCase(status)) {
             stream = stream.filter(UserCoupon::isUsable);
