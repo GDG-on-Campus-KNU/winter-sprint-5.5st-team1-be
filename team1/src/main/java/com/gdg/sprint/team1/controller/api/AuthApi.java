@@ -1,17 +1,18 @@
 package com.gdg.sprint.team1.controller.api;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.dto.auth.LoginRequest;
 import com.gdg.sprint.team1.dto.auth.LoginResponse;
 import com.gdg.sprint.team1.dto.auth.RefreshRequest;
 import com.gdg.sprint.team1.dto.auth.SignupRequest;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 
 @Tag(name = "인증 API", description = "회원가입, 로그인, 토큰 재발급")
 public interface AuthApi {

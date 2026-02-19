@@ -4,14 +4,14 @@ import java.math.BigDecimal;
 
 import org.springframework.http.ResponseEntity;
 
-import com.gdg.sprint.team1.common.ApiResponse;
-import com.gdg.sprint.team1.dto.product.ProductDetailDto;
-import com.gdg.sprint.team1.dto.product.ProductListResponse;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import com.gdg.sprint.team1.common.ApiResponse;
+import com.gdg.sprint.team1.dto.product.ProductDetailDto;
+import com.gdg.sprint.team1.dto.product.ProductListResponse;
 
 @Tag(name = "메뉴(상품) API", description = "상품 목록·상세 조회")
 public interface ProductApi {

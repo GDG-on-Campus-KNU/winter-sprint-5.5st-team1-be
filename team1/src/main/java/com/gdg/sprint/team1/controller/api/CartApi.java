@@ -1,6 +1,15 @@
 package com.gdg.sprint.team1.controller.api;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
+
 import org.springframework.http.ResponseEntity;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.dto.cart.AddCartItemRequest;
@@ -9,14 +18,6 @@ import com.gdg.sprint.team1.dto.cart.DeleteCartItemsRequest;
 import com.gdg.sprint.team1.dto.cart.UpdateCartItemRequest;
 import com.gdg.sprint.team1.security.CurrentUser;
 import com.gdg.sprint.team1.security.UserContextHolder;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
 
 @Tag(name = "장바구니 API", description = "장바구니 조회/추가/수정/삭제 (JWT 인증 필요)")
 @SecurityRequirement(name = "bearerAuth")
