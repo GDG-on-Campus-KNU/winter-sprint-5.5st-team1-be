@@ -1,8 +1,10 @@
 package com.gdg.sprint.team1.controller.cart;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,6 +29,7 @@ import com.gdg.sprint.team1.service.cart.CartService;
 @RestController
 @RequestMapping("/api/v1/cart")
 @SecurityRequirement(name = "bearerAuth")
+@Validated
 public class CartController {
 
     private final CartService cartService;
@@ -51,7 +54,7 @@ public class CartController {
     @PatchMapping("/items/{product_id}")
     @Operation(summary = "장바구니 수량 변경", description = "상품 수량을 변경합니다. 0 이하일 경우 삭제됩니다.")
     public ResponseEntity<ApiResponse<Void>> updateQuantity(
-            @PathVariable("product_id") Integer productId,
+            @PathVariable("product_id") @Positive Integer productId,
             @Valid @RequestBody UpdateCartItemRequest request
     ) {
         cartService.updateQuantity(productId, request.quantity());
@@ -69,7 +72,7 @@ public class CartController {
 
     @DeleteMapping("/items/{product_id}")
     @Operation(summary = "장바구니 단일 삭제", description = "상품 ID로 장바구니 항목을 삭제합니다.")
-    public ResponseEntity<ApiResponse<Void>> deleteItem(@PathVariable("product_id") Integer productId) {
+    public ResponseEntity<ApiResponse<Void>> deleteItem(@PathVariable("product_id") @Positive Integer productId) {
         cartService.deleteItem(productId);
         return ResponseEntity.ok(ApiResponse.success(null, "장바구니 상품 삭제 성공"));
     }

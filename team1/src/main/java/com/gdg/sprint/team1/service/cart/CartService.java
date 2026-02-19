@@ -17,6 +17,8 @@ import com.gdg.sprint.team1.dto.cart.CartSummary;
 import com.gdg.sprint.team1.entity.Product;
 import com.gdg.sprint.team1.entity.Store;
 import com.gdg.sprint.team1.exception.AuthRequiredException;
+import com.gdg.sprint.team1.exception.CartItemNotFoundException;
+import com.gdg.sprint.team1.exception.InsufficientStockException;
 import com.gdg.sprint.team1.exception.ProductNotFoundException;
 import com.gdg.sprint.team1.repository.CartItemRepository;
 import com.gdg.sprint.team1.security.UserContextHolder;
@@ -130,7 +132,11 @@ public class CartService {
 
         Integer stock = product.getStock();
         if (stock != null && quantity > stock) {
-            throw new IllegalArgumentException("OUT_OF_STOCK");
+            throw new InsufficientStockException(
+                product.getName(),
+                quantity,
+                stock
+            );
         }
 
         Long productIdLong = productId.longValue();
@@ -141,7 +147,11 @@ public class CartService {
             } catch (org.springframework.dao.DataIntegrityViolationException ex) {
                 int retried = cartItemRepository.incrementQuantity(userId, productIdLong, quantity);
                 if (retried == 0) {
-                    throw new IllegalArgumentException("OUT_OF_STOCK");
+                    throw new InsufficientStockException(
+                        product.getName(),
+                        quantity,
+                        product.getStock() != null ? product.getStock() : 0
+                    );
                 }
             }
         }
@@ -151,20 +161,23 @@ public class CartService {
     public void updateQuantity(Integer productId, Integer quantity) {
         Integer userId = currentUserId();
         Long productIdLong = productId.longValue();
-        cartItemRepository.findByIdUserIdAndIdProductId(userId, productIdLong)
-            .ifPresent(item -> {
-                if (quantity == null || quantity <= 0) {
-                    cartItemRepository.deleteByIdUserIdAndIdProductId(userId, productIdLong);
-                } else {
-                    Product product = productRepository.findById(productIdLong)
-                        .orElseThrow(() -> new ProductNotFoundException(productIdLong));
-                    Integer stock = product.getStock();
-                    if (stock != null && quantity > stock) {
-                        throw new IllegalArgumentException("OUT_OF_STOCK");
-                    }
-                    item.setQuantity(quantity);
-                }
-            });
+        CartItem item = cartItemRepository.findByIdUserIdAndIdProductId(userId, productIdLong)
+            .orElseThrow(() -> new CartItemNotFoundException(productId));
+        if (quantity == null || quantity <= 0) {
+            cartItemRepository.deleteByIdUserIdAndIdProductId(userId, productIdLong);
+        } else {
+            Product product = productRepository.findById(productIdLong)
+                .orElseThrow(() -> new ProductNotFoundException(productIdLong));
+            Integer stock = product.getStock();
+            if (stock != null && quantity > stock) {
+                throw new InsufficientStockException(
+                    product.getName(),
+                    quantity,
+                    stock
+                );
+            }
+            item.setQuantity(quantity);
+        }
     }
 
     @Transactional

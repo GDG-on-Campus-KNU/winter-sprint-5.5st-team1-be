@@ -1,5 +1,9 @@
 package com.gdg.sprint.team1.controller.order;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
+
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +43,7 @@ import com.gdg.sprint.team1.service.order.OrderService;
 @RestController
 @RequestMapping("/api/v1/orders")
 @SecurityRequirement(name = "bearerAuth")
+@Validated
 public class OrderController {
 
     private final OrderService orderService;
@@ -356,10 +361,10 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<OrderResponse>>> getOrders(
         @Parameter(description = "페이지 번호 (기본값: 1)", example = "1")
-        @RequestParam(required = false, defaultValue = "1") Integer page,  // ← 기본값 1
+        @RequestParam(required = false, defaultValue = "1") @Min(1) Integer page,
 
         @Parameter(description = "페이지당 항목 수 (기본값: 10)", example = "10")
-        @RequestParam(required = false, defaultValue = "10") Integer limit,  // ← 기본값 10
+        @RequestParam(required = false, defaultValue = "10") @Min(1) @Max(100) Integer limit,
 
         @Parameter(description = "주문 상태 필터", example = "PENDING")
         @RequestParam(required = false) String status
@@ -421,7 +426,7 @@ public class OrderController {
     })
     @GetMapping("/{order_id}")
     public ResponseEntity<ApiResponse<OrderDetailResponse>> getOrderDetail(
-        @PathVariable("order_id") Integer orderId) {
+        @PathVariable("order_id") @Positive Integer orderId) {
 
         OrderDetailResponse response = orderService.getOrderDetail(orderId);
         return ResponseEntity.ok(ApiResponse.success(response, "주문 상세 조회 성공"));
@@ -525,7 +530,7 @@ public class OrderController {
     })
     @PatchMapping("/{order_id}/cancel")
     public ResponseEntity<ApiResponse<CancelOrderResponse>> cancelOrder(
-        @PathVariable("order_id") Integer orderId,
+        @PathVariable("order_id") @Positive Integer orderId,
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "취소 사유 (선택)",
             content = @Content(

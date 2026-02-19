@@ -1,17 +1,22 @@
 package com.gdg.sprint.team1.exception;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import jakarta.validation.ConstraintViolationException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.gdg.sprint.team1.common.ApiResponse;
+import com.gdg.sprint.team1.common.ApiResponse.FieldErrorEntry;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -219,13 +224,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
-        FieldError fieldError = ex.getBindingResult().getFieldError();
-        String message = fieldError != null
-            ? fieldError.getField() + ": " + fieldError.getDefaultMessage()
-            : "요청 값이 올바르지 않습니다.";
+        List<FieldErrorEntry> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+            .map(err -> new FieldErrorEntry(err.getField(), err.getDefaultMessage()))
+            .collect(Collectors.toList());
+        String message = fieldErrors.isEmpty()
+            ? "요청 값이 올바르지 않습니다."
+            : fieldErrors.get(0).field() + ": " + fieldErrors.get(0).message();
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
-            .body(ApiResponse.failure("INVALID_REQUEST", message));
+            .body(ApiResponse.failure("INVALID_REQUEST", message, fieldErrors));
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)
@@ -233,6 +240,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(ApiResponse.failure("MISSING_HEADER", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolation(ConstraintViolationException ex) {
+        String message = ex.getConstraintViolations().stream()
+            .findFirst()
+            .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+            .orElse("요청 값이 올바르지 않습니다.");
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.failure("INVALID_REQUEST", message));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
