@@ -19,7 +19,10 @@ import lombok.RequiredArgsConstructor;
 import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.dto.auth.UserMeResponse;
 import com.gdg.sprint.team1.dto.my.MyCouponResponse;
-import com.gdg.sprint.team1.service.my.MyPageService;
+import com.gdg.sprint.team1.exception.AuthRequiredException;
+import com.gdg.sprint.team1.security.UserContextHolder;
+import com.gdg.sprint.team1.service.coupon.UserCouponService;
+import com.gdg.sprint.team1.service.user.UserService;
 
 @Tag(name = "마이페이지 API", description = "내 정보·쿠폰 조회")
 @RestController
@@ -27,13 +30,23 @@ import com.gdg.sprint.team1.service.my.MyPageService;
 @RequiredArgsConstructor
 public class MyPageController {
 
-    private final MyPageService myPageService;
+    private final UserService userService;
+    private final UserCouponService userCouponService;
+
+    private Integer currentUserId() {
+        Integer userId = UserContextHolder.getCurrentUserId();
+        if (userId == null) {
+            throw new AuthRequiredException();
+        }
+        return userId;
+    }
 
     @GetMapping("/info")
     @Operation(summary = "내 정보", description = "JWT에서 추출한 사용자 정보 반환 (인증 여부 확인용)",
         security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<ApiResponse<UserMeResponse>> getMyInfo() {
-        UserMeResponse data = myPageService.getMyInfo();
+        Integer userId = currentUserId();
+        UserMeResponse data = UserMeResponse.from(userService.findById(userId));
         return ResponseEntity.ok(ApiResponse.success(data, "조회 성공"));
     }
 
@@ -44,7 +57,11 @@ public class MyPageController {
         @Parameter(description = "AVAILABLE: 사용가능, USED: 사용완료", schema = @Schema(allowableValues = {"AVAILABLE", "USED"}))
         @RequestParam(required = false) String status
     ) {
-        List<MyCouponResponse> data = myPageService.getMyCoupons(status);
+        Integer userId = currentUserId();
+        List<MyCouponResponse> data = userCouponService.findCouponsByUserId(userId, status)
+            .stream()
+            .map(MyCouponResponse::from)
+            .toList();
         return ResponseEntity.ok(ApiResponse.success(data, "쿠폰 목록 조회 성공"));
     }
 }

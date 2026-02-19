@@ -19,6 +19,7 @@ import com.gdg.sprint.team1.dto.cart.CartSummary;
 import com.gdg.sprint.team1.entity.Product;
 import com.gdg.sprint.team1.exception.AuthRequiredException;
 import com.gdg.sprint.team1.exception.CartItemNotFoundException;
+import com.gdg.sprint.team1.exception.EmptyCartException;
 import com.gdg.sprint.team1.exception.InsufficientStockException;
 import com.gdg.sprint.team1.exception.ProductNotFoundException;
 import com.gdg.sprint.team1.repository.CartItemRepository;
@@ -190,6 +191,31 @@ public class CartService {
         if (!items.isEmpty()) {
             cartItemRepository.deleteAll(items);
         }
+    }
+
+    /**
+     * 주문용 장바구니 항목 조회. 비어 있으면 EmptyCartException.
+     * OrderService에서 장바구니 기반 주문 시 사용한다.
+     */
+    @Transactional(readOnly = true)
+    public List<CartItem> getCartItemsForOrder(Integer userId) {
+        List<CartItem> items = cartItemRepository.findAllByIdUserId(userId);
+        if (items.isEmpty()) {
+            throw new EmptyCartException();
+        }
+        return items;
+    }
+
+    /**
+     * 주문 반영 후 해당 상품들을 장바구니에서 제거.
+     * OrderService에서 장바구니 기반 주문 완료 후 호출한다.
+     */
+    @Transactional
+    public void clearCartItemsForOrder(Integer userId, List<Long> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return;
+        }
+        cartItemRepository.deleteById_UserIdAndId_ProductIdIn(userId, productIds);
     }
 
     public BigDecimal calculateDeliveryFee(BigDecimal totalProductPrice) {

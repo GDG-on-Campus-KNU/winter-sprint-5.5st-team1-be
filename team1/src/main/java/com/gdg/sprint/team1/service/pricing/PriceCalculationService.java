@@ -6,6 +6,10 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.gdg.sprint.team1.dto.pricing.CouponInfo;
+import com.gdg.sprint.team1.dto.pricing.PriceCalculationResult;
+import com.gdg.sprint.team1.dto.pricing.PriceItem;
+
 @Service
 public class PriceCalculationService {
 

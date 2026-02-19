@@ -17,17 +17,20 @@ import com.gdg.sprint.team1.entity.User;
 import com.gdg.sprint.team1.exception.DuplicateEmailException;
 import com.gdg.sprint.team1.exception.InvalidRefreshTokenException;
 import com.gdg.sprint.team1.exception.LoginFailedException;
-import com.gdg.sprint.team1.exception.UserNotFoundException;
 import com.gdg.sprint.team1.repository.RefreshTokenRepository;
-import com.gdg.sprint.team1.repository.UserRepository;
 import com.gdg.sprint.team1.security.JwtTokenProvider;
 import com.gdg.sprint.team1.security.JwtTokenProvider.TokenPayload;
+import com.gdg.sprint.team1.service.user.UserService;
 
+/**
+ * 인증 전용 서비스: 회원가입·로그인·리프레시 토큰.
+ * 사용자 엔티티 접근은 UserService에 위임한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
@@ -35,7 +38,7 @@ public class AuthService {
 
     @Transactional
     public User signup(SignupRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
+        if (userService.existsByEmail(request.email())) {
             throw new DuplicateEmailException(request.email());
         }
 
@@ -46,12 +49,12 @@ public class AuthService {
             request.phone(),
             request.address()
         );
-        return userRepository.save(user);
+        return userService.save(user);
     }
 
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email())
+        User user = userService.findByEmail(request.email())
             .orElseThrow(LoginFailedException::new);
 
         String stored = user.getPassword();
@@ -82,19 +85,12 @@ public class AuthService {
             .orElseThrow(InvalidRefreshTokenException::new);
         refreshTokenRepository.deleteByToken(refreshTokenValue);
 
-        User user = userRepository.findById(payload.userId())
-            .orElseThrow(InvalidRefreshTokenException::new);
+        User user = userService.findById(payload.userId());
 
         String newAccessToken = jwtTokenProvider.createToken(user.getId(), user.getRole());
         String newRefreshTokenValue = jwtTokenProvider.createRefreshToken(user.getId(), user.getRole());
         LocalDateTime expiresAt = LocalDateTime.now().plusDays(jwtProperties.getRefreshExpireDays());
         refreshTokenRepository.save(new RefreshToken(user, newRefreshTokenValue, expiresAt));
         return LoginResponse.of(newAccessToken, newRefreshTokenValue);
-    }
-
-    @Transactional(readOnly = true)
-    public User getCurrentUser(Integer userId) {
-        return userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException(userId));
     }
 }

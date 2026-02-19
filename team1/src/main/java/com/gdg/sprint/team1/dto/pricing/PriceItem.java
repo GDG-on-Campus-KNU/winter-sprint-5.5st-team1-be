@@ -1,4 +1,4 @@
-package com.gdg.sprint.team1.service.pricing;
+package com.gdg.sprint.team1.dto.pricing;
 
 import java.math.BigDecimal;
 

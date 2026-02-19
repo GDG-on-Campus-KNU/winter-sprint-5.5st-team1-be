@@ -1,6 +1,5 @@
 package com.gdg.sprint.team1.service.order;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,12 +8,12 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import lombok.RequiredArgsConstructor;
 
 import com.gdg.sprint.team1.domain.cart.CartItem;
 import com.gdg.sprint.team1.dto.order.CancelOrderResponse;
@@ -23,7 +22,6 @@ import com.gdg.sprint.team1.dto.order.CreateOrderRequest;
 import com.gdg.sprint.team1.dto.order.CreateOrderResponse;
 import com.gdg.sprint.team1.dto.order.OrderDetailResponse;
 import com.gdg.sprint.team1.dto.order.OrderResponse;
-import com.gdg.sprint.team1.entity.Coupon;
 import com.gdg.sprint.team1.entity.Order;
 import com.gdg.sprint.team1.entity.Order.OrderStatus;
 import com.gdg.sprint.team1.entity.OrderItem;
@@ -31,36 +29,30 @@ import com.gdg.sprint.team1.entity.Product;
 import com.gdg.sprint.team1.entity.User;
 import com.gdg.sprint.team1.entity.UserCoupon;
 import com.gdg.sprint.team1.exception.CannotCancelOrderException;
-import com.gdg.sprint.team1.exception.CouponNotFoundException;
-import com.gdg.sprint.team1.exception.EmptyCartException;
 import com.gdg.sprint.team1.exception.EmptyOrderException;
 import com.gdg.sprint.team1.exception.InsufficientStockException;
-import com.gdg.sprint.team1.exception.InvalidCouponException;
-import com.gdg.sprint.team1.exception.MinimumOrderNotMetException;
 import com.gdg.sprint.team1.exception.OrderNotFoundException;
 import com.gdg.sprint.team1.exception.ProductNotFoundException;
 import com.gdg.sprint.team1.exception.UnauthorizedOrderAccessException;
-import com.gdg.sprint.team1.exception.UserNotFoundException;
 import com.gdg.sprint.team1.exception.AuthRequiredException;
-import com.gdg.sprint.team1.repository.CartItemRepository;
-import com.gdg.sprint.team1.security.UserContextHolder;
 import com.gdg.sprint.team1.repository.OrderRepository;
 import com.gdg.sprint.team1.repository.ProductRepository;
-import com.gdg.sprint.team1.repository.UserCouponRepository;
-import com.gdg.sprint.team1.repository.UserRepository;
-import com.gdg.sprint.team1.service.pricing.CouponInfo;
-import com.gdg.sprint.team1.service.pricing.CouponType;
-import com.gdg.sprint.team1.service.pricing.PriceCalculationResult;
+import com.gdg.sprint.team1.security.UserContextHolder;
+import com.gdg.sprint.team1.service.cart.CartService;
+import com.gdg.sprint.team1.dto.order.CouponContext;
+import com.gdg.sprint.team1.service.coupon.UserCouponService;
+import com.gdg.sprint.team1.dto.pricing.PriceCalculationResult;
+import com.gdg.sprint.team1.dto.pricing.PriceItem;
 import com.gdg.sprint.team1.service.pricing.PriceCalculationService;
-import com.gdg.sprint.team1.service.pricing.PriceItem;
+import com.gdg.sprint.team1.service.user.UserService;
 
 /**
- * 주문 서비스
- *
- * 동시성 제어: Optimistic Lock (@Version)
- * - Product 엔티티에 version 필드 추가 필요
- * - 동시 주문 시 자동으로 충돌 감지 및 예외 발생
- * - 클라이언트에서 재시도 처리 권장
+ * 주문 서비스.
+ * <p>
+ * 서비스 책임: 도메인(Order, Product, UserCoupon 등)의 로직을 결합하고 흐름을 조율한다.
+ * 각 도메인 내지 비즈니스 로직은 엔티티/도메인에 위임하고, 서비스는 그 결합만 담당한다.
+ * </p>
+ * 동시성 제어: Product @Version 기반 Optimistic Lock.
  */
 @Service
 @RequiredArgsConstructor
@@ -70,10 +62,10 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
-    private final UserRepository userRepository;
-    private final UserCouponRepository userCouponRepository;
-    private final CartItemRepository cartItemRepository;
     private final PriceCalculationService priceCalculationService;
+    private final UserService userService;
+    private final CartService cartService;
+    private final UserCouponService userCouponService;
 
     private Integer currentUserId() {
         Integer userId = UserContextHolder.getCurrentUserId();
@@ -85,30 +77,17 @@ public class OrderService {
 
     /**
      * 주문 생성 (직접 상품 목록 입력).
-     * 동시성 제어: Product @Version 기반 Optimistic Lock.
      */
     @Transactional
     public CreateOrderResponse createOrder(CreateOrderRequest request) {
         Integer userId = currentUserId();
         log.debug("주문 생성 시작: userId={}", userId);
 
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException(userId));
+        User user = userService.findById(userId);
+        validateOrderItems(request.items());
 
-        if (request.items() == null || request.items().isEmpty()) {
-            throw new EmptyOrderException();
-        }
-
-        List<OrderItemInput> itemInputs = request.items().stream()
-            .map(i -> new OrderItemInput(i.productId().longValue(), i.quantity()))
-            .toList();
-        DeliveryInfo delivery = new DeliveryInfo(
-            request.recipientName(),
-            request.recipientPhone(),
-            request.deliveryAddress(),
-            request.deliveryDetailAddress(),
-            request.deliveryMessage()
-        );
+        List<OrderItemInput> itemInputs = toOrderItemInputs(request.items());
+        DeliveryInfo delivery = toDeliveryInfo(request);
 
         Order order = createOrderInternal(userId, user, itemInputs, delivery, request.userCouponId());
 
@@ -119,38 +98,26 @@ public class OrderService {
 
     /**
      * 장바구니 기반 주문 생성.
-     * 동시성 제어: Optimistic Lock 적용.
      */
     @Transactional
     public CreateOrderResponse createOrderFromCart(CreateOrderFromCartRequest request) {
         Integer userId = currentUserId();
         log.debug("장바구니 기반 주문 생성 시작: userId={}", userId);
 
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException(userId));
-
-        List<CartItem> cartItems = cartItemRepository.findAllByIdUserId(userId);
-        if (cartItems.isEmpty()) {
-            throw new EmptyCartException();
-        }
+        User user = userService.findById(userId);
+        List<CartItem> cartItems = cartService.getCartItemsForOrder(userId);
 
         List<OrderItemInput> itemInputs = cartItems.stream()
             .map(c -> new OrderItemInput(c.getId().getProductId(), c.getQuantity()))
             .toList();
-        DeliveryInfo delivery = new DeliveryInfo(
-            request.recipientName(),
-            request.recipientPhone(),
-            request.deliveryAddress(),
-            request.deliveryDetailAddress(),
-            request.deliveryMessage()
-        );
+        DeliveryInfo delivery = toDeliveryInfo(request);
 
         Order order = createOrderInternal(userId, user, itemInputs, delivery, request.userCouponId());
 
         List<Long> productIds = cartItems.stream()
             .map(c -> c.getId().getProductId())
             .toList();
-        cartItemRepository.deleteById_UserIdAndId_ProductIdIn(userId, productIds);
+        cartService.clearCartItemsForOrder(userId, productIds);
 
         log.info("장바구니 기반 주문 생성 완료: orderId={}, userId={}, finalPrice={}",
             order.getId(), userId, order.getFinalPrice());
@@ -158,7 +125,7 @@ public class OrderService {
     }
 
     /**
-     * 주문 생성 공통 로직: 상품/재고 검증, 쿠폰 검증, 금액 계산, 주문·OrderItem 저장, 재고 차감, 쿠폰 사용.
+     * 주문 생성 공통: 상품 검증·금액 계산·주문 저장·재고·쿠폰은 private 메서드로 위임.
      */
     private Order createOrderInternal(
         Integer userId,
@@ -168,10 +135,62 @@ public class OrderService {
         Integer userCouponId
     ) {
         List<Long> productIds = itemInputs.stream().map(OrderItemInput::productId).toList();
-        Map<Long, Product> productMap = new HashMap<>();
-        productRepository.findAllById(productIds)
-            .forEach(product -> productMap.put(product.getId(), product));
+        Map<Long, Product> productMap = loadProductMap(productIds);
+        List<PriceItem> priceItems = buildPriceItemsAndValidateStock(itemInputs, productMap);
+        CouponContext couponContext = userCouponService.resolveForOrder(userId, userCouponId, priceItems);
 
+        PriceCalculationResult priceResult = priceCalculationService.calculateTotal(
+            priceItems, couponContext.couponInfo());
+
+        Order order = createAndSaveOrder(user, couponContext.userCoupon(), priceResult, delivery);
+        addOrderItemsAndApplyStockAndCoupon(order, itemInputs, productMap, couponContext.userCoupon());
+
+        return order;
+    }
+
+    private void validateOrderItems(List<CreateOrderRequest.OrderItemRequest> items) {
+        if (items == null || items.isEmpty()) {
+            throw new EmptyOrderException();
+        }
+    }
+
+    private static List<OrderItemInput> toOrderItemInputs(List<CreateOrderRequest.OrderItemRequest> items) {
+        return items.stream()
+            .map(i -> new OrderItemInput(i.productId().longValue(), i.quantity()))
+            .toList();
+    }
+
+    private static DeliveryInfo toDeliveryInfo(CreateOrderRequest request) {
+        return new DeliveryInfo(
+            request.recipientName(),
+            request.recipientPhone(),
+            request.deliveryAddress(),
+            request.deliveryDetailAddress(),
+            request.deliveryMessage()
+        );
+    }
+
+    private static DeliveryInfo toDeliveryInfo(CreateOrderFromCartRequest request) {
+        return new DeliveryInfo(
+            request.recipientName(),
+            request.recipientPhone(),
+            request.deliveryAddress(),
+            request.deliveryDetailAddress(),
+            request.deliveryMessage()
+        );
+    }
+
+    private Map<Long, Product> loadProductMap(List<Long> productIds) {
+        Map<Long, Product> map = new HashMap<>();
+        productRepository.findAllById(productIds)
+            .forEach(p -> map.put(p.getId(), p));
+        return map;
+    }
+
+    private List<PriceItem> buildPriceItemsAndValidateStock(
+        List<OrderItemInput> itemInputs,
+        Map<Long, Product> productMap
+    ) {
         List<PriceItem> priceItems = new ArrayList<>();
         for (OrderItemInput input : itemInputs) {
             Product product = productMap.get(input.productId());
@@ -187,35 +206,15 @@ public class OrderService {
             }
             priceItems.add(new PriceItem(product.getId(), product.getPrice(), input.quantity()));
         }
+        return priceItems;
+    }
 
-        UserCoupon userCoupon = null;
-        CouponInfo couponInfo = null;
-        if (userCouponId != null) {
-            userCoupon = userCouponRepository.findById(userCouponId)
-                .orElseThrow(() -> new CouponNotFoundException(userCouponId));
-            if (!userCoupon.isUsable()) {
-                throw new InvalidCouponException("사용할 수 없는 쿠폰입니다.");
-            }
-            if (!userCoupon.getUser().getId().equals(userId)) {
-                throw new InvalidCouponException("본인의 쿠폰만 사용할 수 있습니다.");
-            }
-            Coupon coupon = userCoupon.getCoupon();
-            BigDecimal totalProductPrice = priceItems.stream()
-                .map(item -> item.unitPrice().multiply(BigDecimal.valueOf(item.quantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-            if (coupon.getMinOrderPrice() != null &&
-                totalProductPrice.compareTo(coupon.getMinOrderPrice()) < 0) {
-                throw new MinimumOrderNotMetException(totalProductPrice, coupon.getMinOrderPrice());
-            }
-            couponInfo = new CouponInfo(
-                CouponType.valueOf(coupon.getCouponType().name()),
-                coupon.getDiscountValue(),
-                coupon.getMinOrderPrice()
-            );
-        }
-
-        PriceCalculationResult priceResult = priceCalculationService.calculateTotal(priceItems, couponInfo);
-
+    private Order createAndSaveOrder(
+        User user,
+        UserCoupon userCoupon,
+        PriceCalculationResult priceResult,
+        DeliveryInfo delivery
+    ) {
         Order order = Order.create(
             user,
             userCoupon,
@@ -230,19 +229,24 @@ public class OrderService {
             delivery.deliveryMessage()
         );
         orderRepository.save(order);
+        return order;
+    }
 
+    private void addOrderItemsAndApplyStockAndCoupon(
+        Order order,
+        List<OrderItemInput> itemInputs,
+        Map<Long, Product> productMap,
+        UserCoupon userCoupon
+    ) {
         for (OrderItemInput input : itemInputs) {
             Product product = productMap.get(input.productId());
             OrderItem orderItem = new OrderItem(order, product, input.quantity(), product.getPrice());
             order.addOrderItem(orderItem);
             product.deductStock(input.quantity());
         }
-
         if (userCoupon != null) {
             userCoupon.use();
         }
-
-        return order;
     }
 
     private record OrderItemInput(Long productId, Integer quantity) {}
@@ -255,13 +259,9 @@ public class OrderService {
         String deliveryMessage
     ) {}
 
-    /**
-     * 주문 목록 조회
-     */
     @Transactional(readOnly = true)
     public Page<OrderResponse> getOrders(Integer page, Integer limit, String status) {
         Integer userId = currentUserId();
-        // 페이지네이션 상한선 적용 (최대 100개)
         int safePage = page != null && page >= 1 ? page : 1;
         int safeLimit = limit != null && limit >= 1 ? Math.min(limit, 100) : 10;
 
@@ -273,25 +273,22 @@ public class OrderService {
             Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
-        Page<Order> orderPage;
-        if (status != null && !status.isBlank()) {
-            try {
-                OrderStatus orderStatus = OrderStatus.valueOf(status.toUpperCase());
-                orderPage = orderRepository.findAllByUserIdAndOrderStatus(userId, orderStatus, pageable);
-            } catch (IllegalArgumentException e) {
-                log.warn("유효하지 않은 주문 상태: {}, 전체 조회로 대체", status);
-                orderPage = orderRepository.findAllByUserId(userId, pageable);
-            }
-        } else {
-            orderPage = orderRepository.findAllByUserId(userId, pageable);
-        }
-
+        Page<Order> orderPage = findOrdersByUserAndStatus(userId, status, pageable);
         return orderPage.map(OrderResponse::from);
     }
 
-    /**
-     * 주문 상세 조회
-     */
+    private Page<Order> findOrdersByUserAndStatus(Integer userId, String status, PageRequest pageable) {
+        if (status != null && !status.isBlank()) {
+            try {
+                OrderStatus orderStatus = OrderStatus.valueOf(status.toUpperCase());
+                return orderRepository.findAllByUserIdAndOrderStatus(userId, orderStatus, pageable);
+            } catch (IllegalArgumentException e) {
+                log.warn("유효하지 않은 주문 상태: {}, 전체 조회로 대체", status);
+            }
+        }
+        return orderRepository.findAllByUserId(userId, pageable);
+    }
+
     @Transactional(readOnly = true)
     public OrderDetailResponse getOrderDetail(Integer orderId) {
         Integer userId = currentUserId();
@@ -300,7 +297,6 @@ public class OrderService {
         Order order = orderRepository.findWithDetailsById(orderId)
             .orElseThrow(() -> new OrderNotFoundException(orderId));
 
-        // 본인의 주문만 조회 가능
         if (!order.getUser().getId().equals(userId)) {
             log.warn("권한 없는 주문 조회 시도: userId={}, orderId={}", userId, orderId);
             throw new UnauthorizedOrderAccessException();
@@ -310,60 +306,51 @@ public class OrderService {
     }
 
     /**
-     * 주문 취소
-     *
-     * 비즈니스 로직:
-     * 1. 주문 조회 및 권한 확인
-     * 2. 취소 가능 상태 검증 (PENDING, CONFIRMED만 가능)
-     * 3. 재고 복구 (각 주문 아이템의 quantity만큼 Product.stock 증가)
-     * 4. 쿠폰 복구 (UserCoupon.used_at을 null로 변경)
-     * 5. 주문 상태를 CANCELLED로 변경
-     * 6. 취소 사유 저장
+     * 주문 취소: 조회·권한·상태 검증 후 재고/쿠폰 복구·주문 상태 변경은 도메인에 위임.
      */
     @Transactional
     public CancelOrderResponse cancelOrder(Integer orderId, String cancelReason) {
         Integer userId = currentUserId();
         log.debug("주문 취소 시작: userId={}, orderId={}", userId, orderId);
 
-        // 1. 주문 조회 (JOIN FETCH로 OrderItem, UserCoupon 함께 조회)
         Order order = orderRepository.findWithDetailsById(orderId)
             .orElseThrow(() -> new OrderNotFoundException(orderId));
 
-        // 2. 본인 확인
         if (!order.getUser().getId().equals(userId)) {
             log.warn("권한 없는 주문 취소 시도: userId={}, orderId={}", userId, orderId);
             throw new UnauthorizedOrderAccessException();
         }
 
-        // 3. 취소 가능 상태 확인 (PENDING, CONFIRMED만 가능)
         OrderStatus currentStatus = order.getOrderStatus();
         if (currentStatus != OrderStatus.PENDING && currentStatus != OrderStatus.CONFIRMED) {
             log.warn("취소 불가 상태: orderId={}, status={}", orderId, currentStatus);
             throw new CannotCancelOrderException(currentStatus);
         }
 
-        // 4. 재고 복구 (엔티티 책임)
-        for (OrderItem orderItem : order.getOrderItems()) {
-            Product product = orderItem.getProduct();
-            int returnQuantity = orderItem.getQuantity();
-            product.restoreStock(returnQuantity);
-            log.debug("재고 복구: productId={}, 복구량={}, 새 재고={}",
-                product.getId(), returnQuantity, product.getStock());
-        }
-
-        // 5. 쿠폰 복구 (엔티티 책임)
-        UserCoupon userCoupon = order.getUserCoupon();
-        if (userCoupon != null) {
-            userCoupon.restore();
-            log.debug("쿠폰 복구: userCouponId={}", userCoupon.getId());
-        }
-
-        // 6. 주문 상태 변경 및 취소 사유 저장 (엔티티 책임)
+        restoreStockForOrderItems(order);
+        restoreCouponIfUsed(order);
         order.cancel(cancelReason);
 
         log.info("주문 취소 완료: orderId={}, userId={}, 환불액={}",
             orderId, userId, order.getFinalPrice());
 
         return CancelOrderResponse.from(order);
+    }
+
+    private void restoreStockForOrderItems(Order order) {
+        for (OrderItem orderItem : order.getOrderItems()) {
+            Product product = orderItem.getProduct();
+            product.restoreStock(orderItem.getQuantity());
+            log.debug("재고 복구: productId={}, 복구량={}, 새 재고={}",
+                product.getId(), orderItem.getQuantity(), product.getStock());
+        }
+    }
+
+    private void restoreCouponIfUsed(Order order) {
+        UserCoupon userCoupon = order.getUserCoupon();
+        if (userCoupon != null) {
+            userCoupon.restore();
+            log.debug("쿠폰 복구: userCouponId={}", userCoupon.getId());
+        }
     }
 }
