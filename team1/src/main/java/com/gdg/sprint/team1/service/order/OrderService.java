@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,6 @@ import com.gdg.sprint.team1.domain.cart.CartItem;
 import com.gdg.sprint.team1.dto.order.CancelOrderResponse;
 import com.gdg.sprint.team1.dto.order.CreateOrderFromCartRequest;
 import com.gdg.sprint.team1.dto.order.CreateOrderRequest;
-import com.gdg.sprint.team1.dto.order.CreateOrderRequest.OrderItemRequest;
 import com.gdg.sprint.team1.dto.order.CreateOrderResponse;
 import com.gdg.sprint.team1.dto.order.OrderDetailResponse;
 import com.gdg.sprint.team1.dto.order.OrderResponse;
@@ -97,215 +95,129 @@ public class OrderService {
     }
 
     /**
-     * 주문 생성 (직접 상품 목록 입력)
-     *
-     * 동시성 제어:
-     * - Product의 @Version 필드를 통한 Optimistic Lock
-     * - 재고 차감 시 version 불일치 발생 시 ObjectOptimisticLockingFailureException 발생
-     * - 클라이언트에서 에러 처리 및 재시도 필요
+     * 주문 생성 (직접 상품 목록 입력).
+     * 동시성 제어: Product @Version 기반 Optimistic Lock.
      */
     @Transactional
     public CreateOrderResponse createOrder(CreateOrderRequest request) {
         Integer userId = currentUserId();
         log.debug("주문 생성 시작: userId={}", userId);
 
-        // 1. 사용자 조회
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new UserNotFoundException(userId));
 
-        // 2. 주문 항목 검증
         if (request.items() == null || request.items().isEmpty()) {
             throw new EmptyOrderException();
         }
 
-        // 3. 상품 조회 및 재고 확인
-        List<Integer> productIds = request.items().stream()
-            .map(OrderItemRequest::productId)
+        List<OrderItemInput> itemInputs = request.items().stream()
+            .map(i -> new OrderItemInput(i.productId().longValue(), i.quantity()))
             .toList();
+        DeliveryInfo delivery = new DeliveryInfo(
+            request.recipientName(),
+            request.recipientPhone(),
+            request.deliveryAddress(),
+            request.deliveryDetailAddress(),
+            request.deliveryMessage()
+        );
 
-        Map<Integer, Product> productMap = new HashMap<>();
-        productRepository.findAllById(productIds.stream()
-                .map(Integer::longValue)
-                .collect(Collectors.toList()))
-            .forEach(product -> productMap.put(product.getId().intValue(), product));
-
-        // 4. 각 상품 재고 확인 및 PriceItem 목록 생성
-        List<PriceItem> priceItems = new ArrayList<>();
-        for (CreateOrderRequest.OrderItemRequest item : request.items()) {
-            Product product = productMap.get(item.productId());
-            if (product == null) {
-                throw new ProductNotFoundException(item.productId().longValue());
-            }
-
-            // 재고 확인
-            if (product.getStock() == null || product.getStock() < item.quantity()) {
-                throw new InsufficientStockException(
-                    product.getName(),
-                    item.quantity(),
-                    product.getStock() != null ? product.getStock() : 0
-                );
-            }
-
-            priceItems.add(new PriceItem(product.getId(), product.getPrice(), item.quantity()));
-        }
-
-        // 5. 쿠폰 조회 및 검증
-        UserCoupon userCoupon = null;
-        CouponInfo couponInfo = null;
-        if (request.userCouponId() != null) {
-            userCoupon = userCouponRepository.findById(request.userCouponId())
-                .orElseThrow(() -> new CouponNotFoundException(request.userCouponId()));
-
-            // 쿠폰 사용 가능 여부 확인
-            if (!userCoupon.isUsable()) {
-                throw new InvalidCouponException("사용할 수 없는 쿠폰입니다.");
-            }
-
-            // 쿠폰 소유자 확인
-            if (!userCoupon.getUser().getId().equals(userId)) {
-                throw new InvalidCouponException("본인의 쿠폰만 사용할 수 있습니다.");
-            }
-
-            Coupon coupon = userCoupon.getCoupon();
-
-            // 최소 주문 금액 체크
-            BigDecimal totalProductPrice = priceItems.stream()
-                .map(item -> item.unitPrice().multiply(BigDecimal.valueOf(item.quantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            if (coupon.getMinOrderPrice() != null &&
-                totalProductPrice.compareTo(coupon.getMinOrderPrice()) < 0) {
-                throw new MinimumOrderNotMetException(totalProductPrice, coupon.getMinOrderPrice());
-            }
-
-            couponInfo = new CouponInfo(
-                CouponType.valueOf(coupon.getCouponType().name()),
-                coupon.getDiscountValue(),
-                coupon.getMinOrderPrice()
-            );
-        }
-
-        // 6. 금액 계산
-        PriceCalculationResult priceResult = priceCalculationService.calculateTotal(priceItems, couponInfo);
-
-        // 7. 주문 생성
-        Order order = new Order();
-        order.setUser(user);
-        order.setUserCoupon(userCoupon);
-        order.setTotalProductPrice(priceResult.totalProductPrice());
-        order.setDiscountAmount(priceResult.discountAmount());
-        order.setDeliveryFee(priceResult.deliveryFee());
-        order.setFinalPrice(priceResult.finalPrice());
-        order.setRecipientName(request.recipientName());
-        order.setRecipientPhone(request.recipientPhone());
-        order.setDeliveryAddress(request.deliveryAddress());
-        order.setDeliveryDetailAddress(request.deliveryDetailAddress());
-        order.setDeliveryMessage(request.deliveryMessage());
-        order.setOrderStatus(OrderStatus.PENDING);
-
-        orderRepository.save(order);
-
-        // 8. OrderItem 저장 및 재고 차감
-        for (CreateOrderRequest.OrderItemRequest item : request.items()) {
-            Product product = productMap.get(item.productId());
-
-            OrderItem orderItem = new OrderItem(order, product, item.quantity(), product.getPrice());
-            order.addOrderItem(orderItem);
-
-            // 재고 차감 (Optimistic Lock으로 동시성 제어)
-            // Product의 @Version 필드가 자동으로 증가하며 충돌 감지
-            product.setStock(product.getStock() - item.quantity());
-        }
-
-        // 9. 쿠폰 사용 처리
-        if (userCoupon != null) {
-            userCoupon.use();
-        }
+        Order order = createOrderInternal(userId, user, itemInputs, delivery, request.userCouponId());
 
         log.info("주문 생성 완료: orderId={}, userId={}, finalPrice={}",
             order.getId(), userId, order.getFinalPrice());
-
         return CreateOrderResponse.from(order);
     }
 
     /**
-     * 장바구니 기반 주문 생성
-     *
-     * 동시성 제어: Optimistic Lock 적용
+     * 장바구니 기반 주문 생성.
+     * 동시성 제어: Optimistic Lock 적용.
      */
     @Transactional
     public CreateOrderResponse createOrderFromCart(CreateOrderFromCartRequest request) {
         Integer userId = currentUserId();
         log.debug("장바구니 기반 주문 생성 시작: userId={}", userId);
 
-        // 1. 사용자 조회
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new UserNotFoundException(userId));
 
-        // 2. 장바구니 조회
         List<CartItem> cartItems = cartItemRepository.findAllByIdUserId(userId);
         if (cartItems.isEmpty()) {
             throw new EmptyCartException();
         }
 
-        // 3. 상품 조회 및 재고 확인
-        List<Long> productIds = cartItems.stream()
-            .map(item -> item.getId().getProductId())
-            .collect(Collectors.toList());
+        List<OrderItemInput> itemInputs = cartItems.stream()
+            .map(c -> new OrderItemInput(c.getId().getProductId(), c.getQuantity()))
+            .toList();
+        DeliveryInfo delivery = new DeliveryInfo(
+            request.recipientName(),
+            request.recipientPhone(),
+            request.deliveryAddress(),
+            request.deliveryDetailAddress(),
+            request.deliveryMessage()
+        );
 
+        Order order = createOrderInternal(userId, user, itemInputs, delivery, request.userCouponId());
+
+        List<Long> productIds = cartItems.stream()
+            .map(c -> c.getId().getProductId())
+            .toList();
+        cartItemRepository.deleteByUserIdAndProductIds(userId, productIds);
+
+        log.info("장바구니 기반 주문 생성 완료: orderId={}, userId={}, finalPrice={}",
+            order.getId(), userId, order.getFinalPrice());
+        return CreateOrderResponse.from(order);
+    }
+
+    /**
+     * 주문 생성 공통 로직: 상품/재고 검증, 쿠폰 검증, 금액 계산, 주문·OrderItem 저장, 재고 차감, 쿠폰 사용.
+     */
+    private Order createOrderInternal(
+        Integer userId,
+        User user,
+        List<OrderItemInput> itemInputs,
+        DeliveryInfo delivery,
+        Integer userCouponId
+    ) {
+        List<Long> productIds = itemInputs.stream().map(OrderItemInput::productId).toList();
         Map<Long, Product> productMap = new HashMap<>();
         productRepository.findAllById(productIds)
             .forEach(product -> productMap.put(product.getId(), product));
 
-        // 4. 재고 확인 및 PriceItem 목록 생성
         List<PriceItem> priceItems = new ArrayList<>();
-        for (CartItem cartItem : cartItems) {
-            Long productId = cartItem.getId().getProductId();
-            Product product = productMap.get(productId);
-
+        for (OrderItemInput input : itemInputs) {
+            Product product = productMap.get(input.productId());
             if (product == null) {
-                throw new ProductNotFoundException(productId);
+                throw new ProductNotFoundException(input.productId());
             }
-
-            // 재고 확인
-            if (product.getStock() == null || product.getStock() < cartItem.getQuantity()) {
+            if (product.getStock() == null || product.getStock() < input.quantity()) {
                 throw new InsufficientStockException(
                     product.getName(),
-                    cartItem.getQuantity(),
+                    input.quantity(),
                     product.getStock() != null ? product.getStock() : 0
                 );
             }
-
-            priceItems.add(new PriceItem(product.getId(), product.getPrice(), cartItem.getQuantity()));
+            priceItems.add(new PriceItem(product.getId(), product.getPrice(), input.quantity()));
         }
 
-        // 5. 쿠폰 조회 및 검증
         UserCoupon userCoupon = null;
         CouponInfo couponInfo = null;
-        if (request.userCouponId() != null) {
-            userCoupon = userCouponRepository.findById(request.userCouponId())
-                .orElseThrow(() -> new CouponNotFoundException(request.userCouponId()));
-
+        if (userCouponId != null) {
+            userCoupon = userCouponRepository.findById(userCouponId)
+                .orElseThrow(() -> new CouponNotFoundException(userCouponId));
             if (!userCoupon.isUsable()) {
                 throw new InvalidCouponException("사용할 수 없는 쿠폰입니다.");
             }
-
             if (!userCoupon.getUser().getId().equals(userId)) {
                 throw new InvalidCouponException("본인의 쿠폰만 사용할 수 있습니다.");
             }
-
             Coupon coupon = userCoupon.getCoupon();
-
-            // 최소 주문 금액 체크
             BigDecimal totalProductPrice = priceItems.stream()
                 .map(item -> item.unitPrice().multiply(BigDecimal.valueOf(item.quantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
             if (coupon.getMinOrderPrice() != null &&
                 totalProductPrice.compareTo(coupon.getMinOrderPrice()) < 0) {
                 throw new MinimumOrderNotMetException(totalProductPrice, coupon.getMinOrderPrice());
             }
-
             couponInfo = new CouponInfo(
                 CouponType.valueOf(coupon.getCouponType().name()),
                 coupon.getDiscountValue(),
@@ -313,10 +225,8 @@ public class OrderService {
             );
         }
 
-        // 6. 금액 계산
         PriceCalculationResult priceResult = priceCalculationService.calculateTotal(priceItems, couponInfo);
 
-        // 7. 주문 생성
         Order order = new Order();
         order.setUser(user);
         order.setUserCoupon(userCoupon);
@@ -324,39 +234,37 @@ public class OrderService {
         order.setDiscountAmount(priceResult.discountAmount());
         order.setDeliveryFee(priceResult.deliveryFee());
         order.setFinalPrice(priceResult.finalPrice());
-        order.setRecipientName(request.recipientName());
-        order.setRecipientPhone(request.recipientPhone());
-        order.setDeliveryAddress(request.deliveryAddress());
-        order.setDeliveryDetailAddress(request.deliveryDetailAddress());
-        order.setDeliveryMessage(request.deliveryMessage());
+        order.setRecipientName(delivery.recipientName());
+        order.setRecipientPhone(delivery.recipientPhone());
+        order.setDeliveryAddress(delivery.deliveryAddress());
+        order.setDeliveryDetailAddress(delivery.deliveryDetailAddress());
+        order.setDeliveryMessage(delivery.deliveryMessage());
         order.setOrderStatus(OrderStatus.PENDING);
-
         orderRepository.save(order);
 
-        // 8. OrderItem 저장 및 재고 차감
-        for (CartItem cartItem : cartItems) {
-            Product product = productMap.get(cartItem.getId().getProductId());
-
-            OrderItem orderItem = new OrderItem(order, product, cartItem.getQuantity(), product.getPrice());
+        for (OrderItemInput input : itemInputs) {
+            Product product = productMap.get(input.productId());
+            OrderItem orderItem = new OrderItem(order, product, input.quantity(), product.getPrice());
             order.addOrderItem(orderItem);
-
-            // 재고 차감 (Optimistic Lock으로 동시성 제어)
-            product.setStock(product.getStock() - cartItem.getQuantity());
+            product.setStock(product.getStock() - input.quantity());
         }
 
-        // 9. 쿠폰 사용 처리
         if (userCoupon != null) {
             userCoupon.use();
         }
 
-        // 10. 장바구니 비우기
-        cartItemRepository.deleteByUserIdAndProductIds(userId, productIds);
-
-        log.info("장바구니 기반 주문 생성 완료: orderId={}, userId={}, finalPrice={}",
-            order.getId(), userId, order.getFinalPrice());
-
-        return CreateOrderResponse.from(order);
+        return order;
     }
+
+    private record OrderItemInput(Long productId, Integer quantity) {}
+
+    private record DeliveryInfo(
+        String recipientName,
+        String recipientPhone,
+        String deliveryAddress,
+        String deliveryDetailAddress,
+        String deliveryMessage
+    ) {}
 
     /**
      * 주문 목록 조회

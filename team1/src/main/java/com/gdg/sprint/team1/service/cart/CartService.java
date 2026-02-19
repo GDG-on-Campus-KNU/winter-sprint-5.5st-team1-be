@@ -28,6 +28,9 @@ import com.gdg.sprint.team1.repository.StoreRepository;
 @Service
 public class CartService {
 
+    private static final BigDecimal FREE_DELIVERY_THRESHOLD = new BigDecimal("30000");
+    private static final BigDecimal DEFAULT_DELIVERY_FEE = new BigDecimal("3000");
+
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
@@ -146,13 +149,10 @@ public class CartService {
                 cartItemRepository.save(new CartItem(userId, productIdLong, quantity));
             } catch (org.springframework.dao.DataIntegrityViolationException ex) {
                 int retried = cartItemRepository.incrementQuantity(userId, productIdLong, quantity);
-                if (retried == 0) {
-                    throw new InsufficientStockException(
-                        product.getName(),
-                        quantity,
-                        product.getStock() != null ? product.getStock() : 0
-                    );
+                if (retried > 0) {
+                    return;
                 }
+                throw ex;
             }
         }
     }
@@ -207,9 +207,9 @@ public class CartService {
         if (totalProductPrice == null || totalProductPrice.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
-        return totalProductPrice.compareTo(BigDecimal.valueOf(30000)) >= 0
+        return totalProductPrice.compareTo(FREE_DELIVERY_THRESHOLD) >= 0
             ? BigDecimal.ZERO
-            : BigDecimal.valueOf(3000);
+            : DEFAULT_DELIVERY_FEE;
     }
 
     private String toStoreName(Product product, Map<Long, Store> storeMap) {
