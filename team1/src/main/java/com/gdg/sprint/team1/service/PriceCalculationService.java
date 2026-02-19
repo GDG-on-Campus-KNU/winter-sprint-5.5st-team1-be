@@ -1,4 +1,4 @@
-package com.gdg.sprint.team1.service.pricing;
+package com.gdg.sprint.team1.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

@@ -1,4 +1,4 @@
-package com.gdg.sprint.team1.service.order;
+package com.gdg.sprint.team1.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,34 +17,30 @@ import lombok.RequiredArgsConstructor;
 
 import com.gdg.sprint.team1.domain.cart.CartItem;
 import com.gdg.sprint.team1.dto.order.CancelOrderResponse;
+import com.gdg.sprint.team1.dto.order.CouponContext;
 import com.gdg.sprint.team1.dto.order.CreateOrderFromCartRequest;
 import com.gdg.sprint.team1.dto.order.CreateOrderRequest;
 import com.gdg.sprint.team1.dto.order.CreateOrderResponse;
 import com.gdg.sprint.team1.dto.order.OrderDetailResponse;
 import com.gdg.sprint.team1.dto.order.OrderResponse;
+import com.gdg.sprint.team1.dto.pricing.PriceCalculationResult;
+import com.gdg.sprint.team1.dto.pricing.PriceItem;
 import com.gdg.sprint.team1.entity.Order;
 import com.gdg.sprint.team1.entity.Order.OrderStatus;
 import com.gdg.sprint.team1.entity.OrderItem;
 import com.gdg.sprint.team1.entity.Product;
 import com.gdg.sprint.team1.entity.User;
 import com.gdg.sprint.team1.entity.UserCoupon;
+import com.gdg.sprint.team1.exception.AuthRequiredException;
 import com.gdg.sprint.team1.exception.CannotCancelOrderException;
 import com.gdg.sprint.team1.exception.EmptyOrderException;
 import com.gdg.sprint.team1.exception.InsufficientStockException;
 import com.gdg.sprint.team1.exception.OrderNotFoundException;
 import com.gdg.sprint.team1.exception.ProductNotFoundException;
 import com.gdg.sprint.team1.exception.UnauthorizedOrderAccessException;
-import com.gdg.sprint.team1.exception.AuthRequiredException;
 import com.gdg.sprint.team1.repository.OrderRepository;
 import com.gdg.sprint.team1.repository.ProductRepository;
 import com.gdg.sprint.team1.security.UserContextHolder;
-import com.gdg.sprint.team1.service.cart.CartService;
-import com.gdg.sprint.team1.dto.order.CouponContext;
-import com.gdg.sprint.team1.service.coupon.UserCouponService;
-import com.gdg.sprint.team1.dto.pricing.PriceCalculationResult;
-import com.gdg.sprint.team1.dto.pricing.PriceItem;
-import com.gdg.sprint.team1.service.pricing.PriceCalculationService;
-import com.gdg.sprint.team1.service.user.UserService;
 
 @Service
 @RequiredArgsConstructor

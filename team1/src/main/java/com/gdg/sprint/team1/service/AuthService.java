@@ -1,4 +1,4 @@
-package com.gdg.sprint.team1.service.auth;
+package com.gdg.sprint.team1.service;
 
 import java.time.LocalDateTime;
 
@@ -20,7 +20,6 @@ import com.gdg.sprint.team1.exception.LoginFailedException;
 import com.gdg.sprint.team1.repository.RefreshTokenRepository;
 import com.gdg.sprint.team1.security.JwtTokenProvider;
 import com.gdg.sprint.team1.security.JwtTokenProvider.TokenPayload;
-import com.gdg.sprint.team1.service.user.UserService;
 
 @Service
 @RequiredArgsConstructor

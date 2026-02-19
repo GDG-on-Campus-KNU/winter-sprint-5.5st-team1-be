@@ -1,4 +1,4 @@
-package com.gdg.sprint.team1.service.cart;
+package com.gdg.sprint.team1.service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

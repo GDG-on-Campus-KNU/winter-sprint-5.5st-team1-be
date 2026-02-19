@@ -1,4 +1,4 @@
-package com.gdg.sprint.team1.service.coupon;
+package com.gdg.sprint.team1.service;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -9,16 +9,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import com.gdg.sprint.team1.dto.order.CouponContext;
+import com.gdg.sprint.team1.dto.pricing.CouponInfo;
+import com.gdg.sprint.team1.dto.pricing.CouponType;
+import com.gdg.sprint.team1.dto.pricing.PriceItem;
 import com.gdg.sprint.team1.entity.Coupon;
 import com.gdg.sprint.team1.entity.UserCoupon;
 import com.gdg.sprint.team1.exception.CouponNotFoundException;
 import com.gdg.sprint.team1.exception.InvalidCouponException;
 import com.gdg.sprint.team1.exception.MinimumOrderNotMetException;
 import com.gdg.sprint.team1.repository.UserCouponRepository;
-import com.gdg.sprint.team1.dto.order.CouponContext;
-import com.gdg.sprint.team1.dto.pricing.CouponInfo;
-import com.gdg.sprint.team1.dto.pricing.CouponType;
-import com.gdg.sprint.team1.dto.pricing.PriceItem;
 
 @Service
 @RequiredArgsConstructor

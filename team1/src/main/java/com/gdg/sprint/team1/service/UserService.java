@@ -1,4 +1,4 @@
-package com.gdg.sprint.team1.service.user;
+package com.gdg.sprint.team1.service;
 
 import java.util.Optional;
 
