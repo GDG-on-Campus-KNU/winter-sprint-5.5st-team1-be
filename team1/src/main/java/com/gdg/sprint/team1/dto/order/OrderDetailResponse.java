@@ -5,9 +5,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.gdg.sprint.team1.entity.Order;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import com.gdg.sprint.team1.entity.Order;
 
 @Schema(description = "주문 상세 조회 응답")
 public record OrderDetailResponse(

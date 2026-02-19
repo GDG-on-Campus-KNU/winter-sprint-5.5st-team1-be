@@ -3,9 +3,9 @@ package com.gdg.sprint.team1.dto.order;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.gdg.sprint.team1.entity.OrderItem;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import com.gdg.sprint.team1.entity.OrderItem;
 
 @Schema(description = "주문 상품 아이템 정보")
 public record OrderItemResponse(

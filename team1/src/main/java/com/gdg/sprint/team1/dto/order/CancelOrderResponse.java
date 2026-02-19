@@ -3,9 +3,9 @@ package com.gdg.sprint.team1.dto.order;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.gdg.sprint.team1.entity.Order;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import com.gdg.sprint.team1.entity.Order;
 
 @Schema(description = "주문 취소 응답")
 public record CancelOrderResponse(
