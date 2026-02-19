@@ -44,7 +44,6 @@ public class JwtTokenProvider {
             .compact();
     }
 
-    /** Refresh Token 생성 (만료: refreshExpireDays 일) */
     public String createRefreshToken(Integer userId, UserRole role) {
         long now = System.currentTimeMillis();
         long refreshMinutes = jwtProperties.getRefreshExpireDays() * 24 * 60;

@@ -24,7 +24,6 @@ public class OpenApiConfig {
         return mapper;
     }
 
-    /** Swagger 스키마가 Jackson과 동일하게 snake_case로 노출되도록 설정 */
     @Bean
     public ModelResolver modelResolver(ObjectMapper objectMapper) {
         return new ModelResolver(objectMapper);

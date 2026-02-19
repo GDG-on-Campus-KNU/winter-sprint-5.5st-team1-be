@@ -11,10 +11,6 @@ import com.gdg.sprint.team1.entity.User;
 import com.gdg.sprint.team1.exception.UserNotFoundException;
 import com.gdg.sprint.team1.repository.UserRepository;
 
-/**
- * 사용자(User) 도메인의 단일 진입점.
- * 조회·존재 여부·저장은 모두 이 서비스를 통한다. (Auth, Order, MyPage 등에서 사용)
- */
 @Service
 @RequiredArgsConstructor
 public class UserService {

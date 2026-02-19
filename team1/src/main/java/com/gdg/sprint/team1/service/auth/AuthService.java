@@ -22,10 +22,6 @@ import com.gdg.sprint.team1.security.JwtTokenProvider;
 import com.gdg.sprint.team1.security.JwtTokenProvider.TokenPayload;
 import com.gdg.sprint.team1.service.user.UserService;
 
-/**
- * 인증 전용 서비스: 회원가입·로그인·리프레시 토큰.
- * 사용자 엔티티 접근은 UserService에 위임한다.
- */
 @Service
 @RequiredArgsConstructor
 public class AuthService {

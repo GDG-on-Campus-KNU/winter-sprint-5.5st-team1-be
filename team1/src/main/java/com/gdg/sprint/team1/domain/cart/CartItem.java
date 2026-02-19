@@ -47,7 +47,6 @@ public class CartItem {
     public CartItemId getId() { return id; }
     public Integer getQuantity() { return quantity; }
 
-    /** 수량 변경 (검증: quantity >= 1). setter 대신 도메인 메서드로 의도 노출 */
     public void updateQuantity(int quantity) {
         if (quantity < 1) {
             throw new IllegalArgumentException("quantity must be >= 1");

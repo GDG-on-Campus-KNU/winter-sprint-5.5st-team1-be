@@ -46,14 +46,6 @@ import com.gdg.sprint.team1.dto.pricing.PriceItem;
 import com.gdg.sprint.team1.service.pricing.PriceCalculationService;
 import com.gdg.sprint.team1.service.user.UserService;
 
-/**
- * 주문 서비스.
- * <p>
- * 서비스 책임: 도메인(Order, Product, UserCoupon 등)의 로직을 결합하고 흐름을 조율한다.
- * 각 도메인 내지 비즈니스 로직은 엔티티/도메인에 위임하고, 서비스는 그 결합만 담당한다.
- * </p>
- * 동시성 제어: Product @Version 기반 Optimistic Lock.
- */
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -75,9 +67,6 @@ public class OrderService {
         return userId;
     }
 
-    /**
-     * 주문 생성 (직접 상품 목록 입력).
-     */
     @Transactional
     public CreateOrderResponse createOrder(CreateOrderRequest request) {
         Integer userId = currentUserId();
@@ -96,9 +85,6 @@ public class OrderService {
         return CreateOrderResponse.from(order);
     }
 
-    /**
-     * 장바구니 기반 주문 생성.
-     */
     @Transactional
     public CreateOrderResponse createOrderFromCart(CreateOrderFromCartRequest request) {
         Integer userId = currentUserId();
@@ -124,9 +110,6 @@ public class OrderService {
         return CreateOrderResponse.from(order);
     }
 
-    /**
-     * 주문 생성 공통: 상품 검증·금액 계산·주문 저장·재고·쿠폰은 private 메서드로 위임.
-     */
     private Order createOrderInternal(
         Integer userId,
         User user,
@@ -305,9 +288,6 @@ public class OrderService {
         return OrderDetailResponse.from(order);
     }
 
-    /**
-     * 주문 취소: 조회·권한·상태 검증 후 재고/쿠폰 복구·주문 상태 변경은 도메인에 위임.
-     */
     @Transactional
     public CancelOrderResponse cancelOrder(Integer orderId, String cancelReason) {
         Integer userId = currentUserId();

@@ -82,10 +82,6 @@ public class Order {
 
     protected Order() {}
 
-    /**
-     * 주문 생성 (비즈니스 규칙: 배송·금액·수령인 정보를 한 번에 설정).
-     * setter 노출 대신 엔티티가 생성 책임을 가짐.
-     */
     public static Order create(
         User user,
         UserCoupon userCoupon,
@@ -115,7 +111,6 @@ public class Order {
         return order;
     }
 
-    /** 주문 취소: 상태 및 취소 사유 변경을 엔티티 책임으로 처리 */
     public void cancel(String cancelReason) {
         this.orderStatus = OrderStatus.CANCELLED;
         this.cancelReason = cancelReason;
@@ -137,7 +132,6 @@ public class Order {
         PENDING, CONFIRMED, SHIPPING, DELIVERED, CANCELLED
     }
 
-    // OrderItem 추가 헬퍼 메서드
     public void addOrderItem(OrderItem orderItem) {
         orderItems.add(orderItem);
         orderItem.setOrder(this);

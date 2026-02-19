@@ -39,17 +39,14 @@ public class UserCoupon {
 
     protected UserCoupon() {}
 
-    /** 쿠폰 사용 처리 */
     public void use() {
         this.usedAt = LocalDateTime.now();
     }
 
-    /** 쿠폰 사용 취소(복구) - 주문 취소 시 */
     public void restore() {
         this.usedAt = null;
     }
 
-    /** 쿠폰 사용 가능 여부 확인 */
     public boolean isUsable() {
         LocalDateTime now = LocalDateTime.now();
         return usedAt == null && expiredAt.isAfter(now);

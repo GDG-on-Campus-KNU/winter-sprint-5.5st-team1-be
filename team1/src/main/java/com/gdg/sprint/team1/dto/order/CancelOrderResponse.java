@@ -30,8 +30,8 @@ public record CancelOrderResponse(
             order.getId(),
             order.getOrderStatus().name(),
             order.getCancelReason(),
-            order.getUpdatedAt(), // 취소 시각 = 업데이트 시각
-            order.getFinalPrice() // 환불 금액 = 최종 결제 금액
+            order.getUpdatedAt(),
+            order.getFinalPrice()
         );
     }
 }

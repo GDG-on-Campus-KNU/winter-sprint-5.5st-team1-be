@@ -193,10 +193,6 @@ public class CartService {
         }
     }
 
-    /**
-     * 주문용 장바구니 항목 조회. 비어 있으면 EmptyCartException.
-     * OrderService에서 장바구니 기반 주문 시 사용한다.
-     */
     @Transactional(readOnly = true)
     public List<CartItem> getCartItemsForOrder(Integer userId) {
         List<CartItem> items = cartItemRepository.findAllByIdUserId(userId);
@@ -206,10 +202,6 @@ public class CartService {
         return items;
     }
 
-    /**
-     * 주문 반영 후 해당 상품들을 장바구니에서 제거.
-     * OrderService에서 장바구니 기반 주문 완료 후 호출한다.
-     */
     @Transactional
     public void clearCartItemsForOrder(Integer userId, List<Long> productIds) {
         if (productIds == null || productIds.isEmpty()) {

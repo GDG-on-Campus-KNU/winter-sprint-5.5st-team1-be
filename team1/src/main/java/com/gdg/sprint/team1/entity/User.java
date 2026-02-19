@@ -48,10 +48,6 @@ public class User {
 
     protected User() {}
 
-    /**
-     * 회원가입용 사용자 생성 (비즈니스 규칙: Role = USER 고정).
-     * setter 노출 대신 엔티티가 생성 책임을 가짐.
-     */
     public static User create(
         String email,
         String encodedPassword,

@@ -50,7 +50,6 @@ public class Product {
         updatedAt = Instant.now();
     }
 
-    /** 재고 차감 (엔티티 책임: 음수 방지) */
     public void deductStock(int quantity) {
         int current = this.stock != null ? this.stock : 0;
         if (current < quantity) {
@@ -59,7 +58,6 @@ public class Product {
         this.stock = current - quantity;
     }
 
-    /** 재고 복구 (주문 취소 등) */
     public void restoreStock(int quantity) {
         int current = this.stock != null ? this.stock : 0;
         this.stock = current + quantity;
