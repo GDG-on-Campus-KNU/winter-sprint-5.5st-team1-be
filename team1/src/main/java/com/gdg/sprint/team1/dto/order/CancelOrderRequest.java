@@ -1,7 +1,8 @@
 package com.gdg.sprint.team1.dto.order;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Size;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "주문 취소 요청")
 public record CancelOrderRequest(

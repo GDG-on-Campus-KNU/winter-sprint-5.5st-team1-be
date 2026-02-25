@@ -1,0 +1,44 @@
+# staging 브랜치에 push/merge 시 GCP VM(볼륨)에 자동 배포
+#
+# 필수 GitHub Secrets (Settings → Secrets and variables → Actions):
+#   DEPLOY_HOST      - GCP VM 외부 IP 또는 호스트명
+#   DEPLOY_USER      - SSH 로그인 사용자 (예: ubuntu)
+#   DEPLOY_SSH_PRIVATE_KEY - VM 접속용 SSH 개인키 전체 내용
+#   DEPLOY_PATH      - VM 내 프로젝트 경로 (예: /home/ubuntu/winter-sprint-5.5st-team1-be)
+# 선택:
+#   DEPLOY_SSH_PORT  - SSH 포트 (기본 22)
+#
+# VM 사전 준비: Git 저장소 클론, Docker·Docker Compose 설치, SSH 키 등록
+name: Staging Deploy to GCP
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  deploy:
+    name: Deploy to GCP VM
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: staging
+
+      - name: Deploy to GCP VM via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+            git fetch origin staging
+            git reset --hard origin/staging
+            docker compose pull --quiet
+            docker compose up -d --build
+            docker image prune -f || true

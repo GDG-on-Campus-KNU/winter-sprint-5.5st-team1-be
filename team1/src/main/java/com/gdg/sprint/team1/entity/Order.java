@@ -80,7 +80,41 @@ public class Order {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public Order() {} // ✅ protected → public 변경
+    protected Order() {}
+
+    public static Order create(
+        User user,
+        UserCoupon userCoupon,
+        BigDecimal totalProductPrice,
+        BigDecimal discountAmount,
+        BigDecimal deliveryFee,
+        BigDecimal finalPrice,
+        String recipientName,
+        String recipientPhone,
+        String deliveryAddress,
+        String deliveryDetailAddress,
+        String deliveryMessage
+    ) {
+        Order order = new Order();
+        order.user = user;
+        order.userCoupon = userCoupon;
+        order.totalProductPrice = totalProductPrice;
+        order.discountAmount = discountAmount != null ? discountAmount : BigDecimal.ZERO;
+        order.deliveryFee = deliveryFee != null ? deliveryFee : BigDecimal.ZERO;
+        order.finalPrice = finalPrice;
+        order.recipientName = recipientName;
+        order.recipientPhone = recipientPhone;
+        order.deliveryAddress = deliveryAddress;
+        order.deliveryDetailAddress = deliveryDetailAddress;
+        order.deliveryMessage = deliveryMessage;
+        order.orderStatus = OrderStatus.PENDING;
+        return order;
+    }
+
+    public void cancel(String cancelReason) {
+        this.orderStatus = OrderStatus.CANCELLED;
+        this.cancelReason = cancelReason;
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -98,7 +132,6 @@ public class Order {
         PENDING, CONFIRMED, SHIPPING, DELIVERED, CANCELLED
     }
 
-    // OrderItem 추가 헬퍼 메서드
     public void addOrderItem(OrderItem orderItem) {
         orderItems.add(orderItem);
         orderItem.setOrder(this);

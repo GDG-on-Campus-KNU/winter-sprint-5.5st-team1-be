@@ -27,7 +27,7 @@ public class CartItem {
 
     protected CartItem() {}
 
-    public CartItem(Integer userId, Integer productId, Integer quantity) {
+    public CartItem(Integer userId, Long productId, Integer quantity) {
         this.id = new CartItemId(userId, productId);
         setQuantity(quantity);
     }
@@ -46,7 +46,15 @@ public class CartItem {
 
     public CartItemId getId() { return id; }
     public Integer getQuantity() { return quantity; }
-    public void setQuantity(Integer quantity) {
+
+    public void updateQuantity(int quantity) {
+        if (quantity < 1) {
+            throw new IllegalArgumentException("quantity must be >= 1");
+        }
+        this.quantity = quantity;
+    }
+
+    private void setQuantity(Integer quantity) {
         if (quantity == null || quantity < 1) {
             throw new IllegalArgumentException("quantity must be >= 1");
         }

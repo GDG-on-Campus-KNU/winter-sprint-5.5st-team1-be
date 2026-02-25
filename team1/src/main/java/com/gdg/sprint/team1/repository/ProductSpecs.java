@@ -10,11 +10,6 @@ public final class ProductSpecs {
 
     private ProductSpecs() {}
 
-    public static Specification<Product> storeId(Long storeId) {
-        if (storeId == null) return (root, query, cb) -> cb.conjunction();
-        return (root, query, cb) -> cb.equal(root.get("storeId"), storeId);
-    }
-
     public static Specification<Product> status(String status) {
         if (status == null || status.isBlank()) return (root, query, cb) -> cb.conjunction();
         return (root, query, cb) -> cb.equal(root.get("productStatus"), status);
