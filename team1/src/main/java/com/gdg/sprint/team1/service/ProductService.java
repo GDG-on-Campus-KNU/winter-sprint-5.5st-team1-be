@@ -130,4 +130,14 @@ public class ProductService {
             default -> "createdAt";
         };
     }
+
+    @Transactional(readOnly = true)
+    public ProductListResponse getAdminProductList(
+            Integer page,
+            Integer limit,
+            String status,
+            String search
+    ) {
+        return getProductList(page, limit, status, search, null, null, null, null, null);
+    }
 }
