@@ -4,6 +4,7 @@ import java.util.List;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.dto.auth.UserMeResponse;
 import com.gdg.sprint.team1.dto.my.MyCouponResponse;
+import com.gdg.sprint.team1.dto.order.OrderDetailResponse;
 import com.gdg.sprint.team1.dto.order.OrderResponse;
 import com.gdg.sprint.team1.security.CurrentUser;
 import com.gdg.sprint.team1.security.UserContextHolder;
@@ -58,5 +60,19 @@ public interface MyPageApi {
                     allowableValues = {"PENDING", "CONFIRMED", "SHIPPING", "DELIVERED", "CANCELLED"}
             )) String status,
             @Parameter(description = "조회 기간(개월)", schema = @Schema(allowableValues = {"1", "3", "6"})) Integer months
+    );
+
+    @Operation(
+            summary = "내 주문 상세",
+            description = "내 주문 상세 정보(배송 정보 포함)를 조회합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "주문 없음")
+    })
+    ResponseEntity<ApiResponse<OrderDetailResponse>> getMyOrderDetail(
+            @Parameter(hidden = true) @CurrentUser UserContextHolder.UserContext user,
+            @Parameter(description = "주문 ID", example = "1") @Positive Integer orderId
     );
 }
