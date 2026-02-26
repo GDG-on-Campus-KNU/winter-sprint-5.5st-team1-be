@@ -2,7 +2,12 @@ package com.gdg.sprint.team1.controller;
 
 import java.util.List;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,18 +19,22 @@ import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.controller.api.MyPageApi;
 import com.gdg.sprint.team1.dto.auth.UserMeResponse;
 import com.gdg.sprint.team1.dto.my.MyCouponResponse;
+import com.gdg.sprint.team1.dto.order.OrderResponse;
 import com.gdg.sprint.team1.security.CurrentUser;
 import com.gdg.sprint.team1.security.UserContextHolder;
+import com.gdg.sprint.team1.service.OrderService;
 import com.gdg.sprint.team1.service.UserCouponService;
 import com.gdg.sprint.team1.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/my")
+@Validated
 @RequiredArgsConstructor
 public class MyPageController implements MyPageApi {
 
     private final UserService userService;
     private final UserCouponService userCouponService;
+    private final OrderService orderService;
 
     @Override
     @GetMapping("/info")
@@ -47,5 +56,18 @@ public class MyPageController implements MyPageApi {
             .map(MyCouponResponse::from)
             .toList();
         return ResponseEntity.ok(ApiResponse.success(data, "쿠폰 목록 조회 성공"));
+    }
+
+    @Override
+    @GetMapping("/orders")
+    public ResponseEntity<ApiResponse<Page<OrderResponse>>> getMyOrders(
+            @CurrentUser UserContextHolder.UserContext user,
+            @RequestParam(required = false, defaultValue = "1") @Min(1) Integer page,
+            @RequestParam(required = false, defaultValue = "10") @Min(1) @Max(100) Integer limit,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer months
+    ) {
+        Page<OrderResponse> data = orderService.getMyOrders(user.userId(), page, limit, status, months);
+        return ResponseEntity.ok(ApiResponse.success(data, "주문 목록 조회 성공"));
     }
 }
