@@ -35,13 +35,13 @@ public interface MyPageApi {
         @Parameter(hidden = true) @CurrentUser UserContextHolder.UserContext user
     );
 
-    @Operation(summary = "내 쿠폰 목록", description = "사용 가능/사용 완료 필터 (status=AVAILABLE | USED, 미지정 시 전체)", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "내 쿠폰 목록", description = "사용 가능/사용 완료 필터 (status=AVAILABLE | USED | EXPIRED, 미지정 시 전체)", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
     })
     ResponseEntity<ApiResponse<List<MyCouponResponse>>> getMyCoupons(
         @Parameter(hidden = true) @CurrentUser UserContextHolder.UserContext user,
-        @Parameter(description = "AVAILABLE: 사용가능, USED: 사용완료", schema = @Schema(allowableValues = {"AVAILABLE", "USED"})) String status
+        @Parameter(description = "AVAILABLE: 사용가능, USED: 사용완료, EXPIRED: 만료", schema = @Schema(allowableValues = {"AVAILABLE", "USED", "EXPIRED"})) String status
     );
 
     @Operation(
