@@ -9,7 +9,8 @@ INSERT INTO users (id, email, password, name, phone, address, role)
 VALUES
     (1, 'dev1@gdg.com', 'dev123', 'Dev1', '010-1111-1111', '서울시 강남구', 'USER'),
     (2, 'dev2@gdg.com', 'dev123', 'Dev2', '010-2222-2222', '서울시 마포구', 'USER'),
-    (3, 'dev3@gdg.com', 'dev123', 'Dev3', '010-3333-3333', '서울시 서초구', 'USER');
+    (3, 'dev3@gdg.com', 'dev123', 'Dev3', '010-3333-3333', '서울시 서초구', 'USER'),
+    (4, 'admin@gdg.com', 'admin123', 'Admin', '010-0000-0000', '서울시 강남구', 'ADMIN');
 
 -- 상품 12개
 INSERT INTO products (id, name, description, price, stock, product_status)
