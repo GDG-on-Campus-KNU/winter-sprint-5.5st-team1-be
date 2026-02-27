@@ -37,6 +37,7 @@ CREATE TABLE products (
     price DECIMAL(10, 2) NOT NULL,
     stock INT NOT NULL DEFAULT 0,
     product_status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+    image_url TEXT NULL,
     version BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -64,7 +65,7 @@ CREATE TABLE cart_items (
 -- Coupon 테이블
 -- 플랫폼 전체에서 사용 가능한 쿠폰 마스터 테이블입니다.
 -- 실무에서는 쿠폰 사용/정산 이력을 남기기 위해 쿠폰 행을 직접 DELETE 하기보다는
--- coupon_status 로 비활성화(소프트 삭제)하는 방식을 기본 전제로 합니다.
+-- coupon_status 로 비활성화(소프트 삭제)하는 방 식을 기본 전제로 합니다.
 CREATE TABLE coupons (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
