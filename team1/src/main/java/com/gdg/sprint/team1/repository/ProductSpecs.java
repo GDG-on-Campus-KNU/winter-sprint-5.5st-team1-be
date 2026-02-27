@@ -1,6 +1,7 @@
 package com.gdg.sprint.team1.repository;
 
 import java.math.BigDecimal;
+import java.util.Locale;
 
 import org.springframework.data.jpa.domain.Specification;
 
@@ -16,10 +17,12 @@ public final class ProductSpecs {
             return (root, query, cb) -> cb.conjunction();
         }
         try {
-            ProductStatus productStatus = ProductStatus.valueOf(status.toUpperCase());
+            ProductStatus productStatus = ProductStatus.valueOf(
+                status.trim().toUpperCase(Locale.ROOT)
+            );
             return (root, query, cb) -> cb.equal(root.get("productStatus"), productStatus);
         } catch (IllegalArgumentException e) {
-            return (root, query, cb) -> cb.conjunction();
+            return (root, query, cb) -> cb.disjunction();
         }
     }
 
