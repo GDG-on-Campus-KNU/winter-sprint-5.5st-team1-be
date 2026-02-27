@@ -88,6 +88,45 @@ public class User {
         updatedAt = LocalDateTime.now();
     }
 
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public UserRole getRole() { return role; }
+    public void setRole(UserRole role) { this.role = role; }
+
+    public void updateProfile(String name, String phone, String address) {
+        if (name != null) {
+            String trimmedName = name.trim();
+            if (trimmedName.isEmpty()) {
+                throw new IllegalArgumentException("이름은 공백만 입력할 수 없습니다.");
+            }
+            this.name = trimmedName;
+        }
+        if (phone != null) {
+            String trimmedPhone = phone.trim();
+            if (!trimmedPhone.isEmpty()) {
+                this.phone = trimmedPhone;
+            }
+        }
+        if (address != null) {
+            String trimmedAddress = address.trim();
+            if (!trimmedAddress.isEmpty()) {
+                this.address = trimmedAddress;
+            }
+        }
+    }
+
     public enum UserRole {
         USER,
         ADMIN
