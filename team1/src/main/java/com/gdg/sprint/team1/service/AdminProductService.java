@@ -67,10 +67,10 @@ public class AdminProductService {
             .toList();
 
         PaginationInfo pagination = new PaginationInfo(
-            page != null ? page : 1,
-            pageSize,
-            productPage.getTotalElements(),
+            productPage.getNumber() + 1,
             productPage.getTotalPages(),
+            productPage.getTotalElements(),
+            productPage.getSize(),
             productPage.hasNext(),
             productPage.hasPrevious()
         );
