@@ -131,6 +131,9 @@ public class Product {
     }
 
     public void deductStock(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("차감 수량은 1 이상이어야 합니다.");
+        }
         int current = this.stock != null ? this.stock : 0;
         if (current < quantity) {
             throw new InsufficientStockException(getName(), quantity, current);
@@ -140,6 +143,9 @@ public class Product {
     }
 
     public void restoreStock(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("복원 수량은 1 이상이어야 합니다.");
+        }
         int current = this.stock != null ? this.stock : 0;
         this.stock = current + quantity;
         updateStatusByStock();
