@@ -13,36 +13,47 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import lombok.Getter;
+
 @Entity
 @Table(name = "users")
 public class User {
 
+    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Getter
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Getter
     @Column(nullable = false)
     private String password;
 
+    @Getter
     @Column(nullable = false, length = 100)
     private String name;
 
+    @Getter
     @Column(length = 20)
     private String phone;
 
+    @Getter
     @Column(columnDefinition = "TEXT")
     private String address;
 
+    @Getter
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private UserRole role = UserRole.USER;
 
+    @Getter
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Getter
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
@@ -76,23 +87,6 @@ public class User {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public UserRole getRole() { return role; }
-    public void setRole(UserRole role) { this.role = role; }
 
     public enum UserRole {
         USER,

@@ -14,40 +14,52 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import lombok.Getter;
+
 @Entity
 @Table(name = "coupons")
 public class Coupon {
 
+    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Getter
     @Column(nullable = false)
     private String name;
 
+    @Getter
     @Column(name = "min_order_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal minOrderPrice = BigDecimal.ZERO;
 
+    @Getter
     @Enumerated(EnumType.STRING)
     @Column(name = "coupon_type", nullable = false, length = 50)
     private CouponType couponType;
 
+    @Getter
     @Column(name = "discount_value", nullable = false, precision = 10, scale = 2)
     private BigDecimal discountValue;
 
+    @Getter
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Getter
     @Enumerated(EnumType.STRING)
     @Column(name = "coupon_status", nullable = false, length = 20)
     private CouponStatus couponStatus = CouponStatus.ACTIVE;
 
+    @Getter
     @Column(name = "valid_days", nullable = false)
     private Integer validDays = 30;
 
+    @Getter
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Getter
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
@@ -73,23 +85,4 @@ public class Coupon {
         ACTIVE,
         INACTIVE
     }
-
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public BigDecimal getMinOrderPrice() { return minOrderPrice; }
-    public void setMinOrderPrice(BigDecimal minOrderPrice) { this.minOrderPrice = minOrderPrice; }
-    public CouponType getCouponType() { return couponType; }
-    public void setCouponType(CouponType couponType) { this.couponType = couponType; }
-    public BigDecimal getDiscountValue() { return discountValue; }
-    public void setDiscountValue(BigDecimal discountValue) { this.discountValue = discountValue; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public CouponStatus getCouponStatus() { return couponStatus; }
-    public void setCouponStatus(CouponStatus couponStatus) { this.couponStatus = couponStatus; }
-    public Integer getValidDays() { return validDays; }
-    public void setValidDays(Integer validDays) { this.validDays = validDays; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
