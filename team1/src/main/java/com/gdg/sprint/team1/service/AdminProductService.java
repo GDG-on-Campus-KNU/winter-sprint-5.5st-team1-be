@@ -94,7 +94,10 @@ public class AdminProductService {
 
     @Transactional
     public ProductDetailDto createProduct(CreateProductRequest request, MultipartFile image) {
-        String imageUrl = s3Service.uploadFile(image);
+        String imageUrl = null;
+        if (image != null && !image.isEmpty()) {
+            imageUrl = s3Service.uploadFile(image);
+        }
 
         Product product = Product.create(
             request.name(),
@@ -123,12 +126,13 @@ public class AdminProductService {
         );
 
         if (image != null && !image.isEmpty()) {
-            if (product.getImageUrl() != null) {
-                s3Service.deleteFile(product.getImageUrl());
-            }
-
+            String oldImageUrl = product.getImageUrl();
             String newImageUrl = s3Service.uploadFile(image);
             product.updateImageUrl(newImageUrl);
+
+            if (oldImageUrl != null) {
+                s3Service.deleteFile(oldImageUrl);
+            }
         }
 
         log.info("상품 수정 완료: {}", productId);
