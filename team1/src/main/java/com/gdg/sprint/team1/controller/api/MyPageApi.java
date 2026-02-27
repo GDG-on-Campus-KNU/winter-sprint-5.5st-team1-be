@@ -2,6 +2,7 @@ package com.gdg.sprint.team1.controller.api;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.dto.auth.UserMeResponse;
 import com.gdg.sprint.team1.dto.my.MyCouponResponse;
+import com.gdg.sprint.team1.dto.my.UpdateMyInfoRequest;
 import com.gdg.sprint.team1.dto.order.OrderDetailResponse;
 import com.gdg.sprint.team1.dto.order.OrderResponse;
 import com.gdg.sprint.team1.security.CurrentUser;
@@ -75,4 +77,19 @@ public interface MyPageApi {
             @Parameter(hidden = true) @CurrentUser UserContextHolder.UserContext user,
             @Parameter(description = "주문 ID", example = "1") @Positive Integer orderId
     );
+
+    @Operation(
+            summary = "내 정보 수정",
+            description = "로그인 사용자의 이름/전화번호/주소를 부분 수정합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    ResponseEntity<ApiResponse<UserMeResponse>> updateMyInfo(
+            @Parameter(hidden = true) @CurrentUser UserContextHolder.UserContext user,
+            @Valid UpdateMyInfoRequest request
+    );
+
 }
