@@ -1,5 +1,6 @@
 package com.gdg.sprint.team1.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -240,6 +241,51 @@ public class OrderService {
         );
 
         Page<Order> orderPage = findOrdersByUserAndStatus(userId, status, pageable);
+        return orderPage.map(OrderResponse::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> getMyOrders(Integer userId, Integer page, Integer limit, String status, Integer months) {
+        int safePage = page != null && page >= 1 ? page : 1;
+        int safeLimit = limit != null && limit >= 1 ? Math.min(limit, 100) : 10;
+
+        if (months != null && months != 1 && months != 3 && months != 6) {
+            throw new IllegalArgumentException("months must be one of 1, 3, 6");
+        }
+
+        PageRequest pageable = PageRequest.of(
+                safePage - 1,
+                safeLimit,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        OrderStatus orderStatus = null;
+        if (status != null && !status.isBlank()) {
+            try {
+                orderStatus = OrderStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("invalid status: " + status);
+            }
+        }
+
+        Page<Order> orderPage;
+        if (months == null) {
+            if (orderStatus == null) {
+                orderPage = orderRepository.findAllByUserId(userId, pageable);
+            } else {
+                orderPage = orderRepository.findAllByUserIdAndOrderStatus(userId, orderStatus, pageable);
+            }
+        } else {
+            LocalDateTime fromDate = LocalDateTime.now().minusMonths(months);
+            if (orderStatus == null) {
+                orderPage = orderRepository.findAllByUserIdAndCreatedAtGreaterThanEqual(userId, fromDate, pageable);
+            } else {
+                orderPage = orderRepository.findAllByUserIdAndOrderStatusAndCreatedAtGreaterThanEqual(
+                        userId, orderStatus, fromDate, pageable
+                );
+            }
+        }
+
         return orderPage.map(OrderResponse::from);
     }
 
