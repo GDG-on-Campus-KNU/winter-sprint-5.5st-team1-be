@@ -1,6 +1,9 @@
 package com.gdg.sprint.team1.service;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +24,14 @@ import com.gdg.sprint.team1.exception.FileUploadException;
 @Service
 @RequiredArgsConstructor
 public class S3Service {
+
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
+        "image/png",
+        "image/jpeg",
+        "image/webp"
+    );
+
     private final S3Client s3Client;
 
     @Value("${cloud.aws.s3.bucket}")
@@ -47,21 +58,41 @@ public class S3Service {
             return null;
         }
 
+        if (file.getSize() > MAX_FILE_SIZE) {
+            String errorMsg = String.format(
+                "파일 크기가 너무 큽니다. (최대: 10MB, 현재: %.2fMB)",
+                file.getSize() / (1024.0 * 1024.0)
+            );
+            log.warn(errorMsg);
+            throw new IllegalArgumentException(errorMsg);
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null ||
+            !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) {
+            String errorMsg = "이미지 파일만 업로드 가능합니다. (지원: PNG, JPG, WEBP)";
+            log.warn("지원하지 않는 파일 형식: {}", contentType);
+            throw new IllegalArgumentException(errorMsg);
+        }
+
         String uniqueFilename = UUID.randomUUID() + "_" + originalFilename;
-        log.info("S3 업로드 시작: 원본={}, 고유명={}", originalFilename, uniqueFilename);
+        log.info("S3 업로드 시작: 원본={}, 고유명={}, 크기={}bytes",
+            originalFilename, uniqueFilename, file.getSize());
 
         try {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(uniqueFilename)
-                .contentType(file.getContentType())
+                .contentType(contentType)
                 .contentLength(file.getSize())
                 .build();
 
-            s3Client.putObject(
-                putObjectRequest,
-                RequestBody.fromBytes(file.getBytes())
-            );
+            try (InputStream inputStream = file.getInputStream()) {
+                s3Client.putObject(
+                    putObjectRequest,
+                    RequestBody.fromInputStream(inputStream, file.getSize())
+                );
+            }
 
             String fileUrl = String.format(
                 "https://%s.s3.%s.amazonaws.com/%s",
@@ -73,12 +104,12 @@ public class S3Service {
             return fileUrl;
 
         } catch (IOException e) {
-            log.error("파일 업로드 실패: {}", originalFilename, e);
+            log.error("파일 읽기 실패: {}", originalFilename, e);
             throw new FileUploadException("파일 업로드에 실패했습니다.", e);
 
         } catch (Exception e) {
             log.error("S3 업로드 실패: {}", e.getMessage(), e);
-            throw new RuntimeException("S3 업로드에 실패했습니다.", e);
+            throw new FileUploadException("S3 업로드에 실패했습니다.", e);
         }
     }
 
