@@ -96,13 +96,23 @@ public class User {
 
     public void updateProfile(String name, String phone, String address) {
         if (name != null) {
-            this.name = name.trim();
+            String trimmedName = name.trim();
+            if (trimmedName.isEmpty()) {
+                throw new IllegalArgumentException("이름은 공백만 입력할 수 없습니다.");
+            }
+            this.name = trimmedName;
         }
         if (phone != null) {
-            this.phone = phone.trim();
+            String trimmedPhone = phone.trim();
+            if (!trimmedPhone.isEmpty()) {
+                this.phone = trimmedPhone;
+            }
         }
         if (address != null) {
-            this.address = address.trim();
+            String trimmedAddress = address.trim();
+            if (!trimmedAddress.isEmpty()) {
+                this.address = trimmedAddress;
+            }
         }
     }
 
