@@ -94,6 +94,18 @@ public class User {
     public UserRole getRole() { return role; }
     public void setRole(UserRole role) { this.role = role; }
 
+    public void updateProfile(String name, String phone, String address) {
+        if (name != null) {
+            this.name = name.trim();
+        }
+        if (phone != null) {
+            this.phone = phone.trim();
+        }
+        if (address != null) {
+            this.address = address.trim();
+        }
+    }
+
     public enum UserRole {
         USER,
         ADMIN
