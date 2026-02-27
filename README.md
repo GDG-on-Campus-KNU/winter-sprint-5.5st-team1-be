@@ -1,6 +1,6 @@
 # GDG Sprint Team1 Backend
 
-Spring Boot 기반 백엔드 API (Week 1: 메뉴/장바구니/주문, Week 2: JWT 인증·마이페이지).
+Spring Boot 기반 백엔드 API (Week 1: 메뉴/장바구니/주문, Week 2: JWT 인증·마이페이지, Week 3: 관리자 API, 이미지 업로드).
 
 ## Week 2 변경 사항 (인증 & 사용자 경험 강화)
 
@@ -10,6 +10,19 @@ Spring Boot 기반 백엔드 API (Week 1: 메뉴/장바구니/주문, Week 2: JW
 - **주문 API**: `GET /api/v1/orders`, `GET /api/v1/orders/{order_id}` (목록·상세), `POST /api/v1/orders`, `POST /api/v1/orders/from-cart`, `PATCH /api/v1/orders/{order_id}/cancel`.
 - **마이페이지**: 내 정보 `GET /api/v1/my/info`, 쿠폰 목록 `GET /api/v1/my/coupons` (필터: `status=AVAILABLE` | `USED`).
 
+## Week 3 변경 사항 (마이페이지 · 관리자 & 확장)
+### 이미지 업로드
+- AWS S3를 사용한 이미지 업로드
+- POST /api/v1/admin/products (이미지 포함 상품 등록)
+- PATCH /api/v1/admin/products/{id} (이미지 교체)
+
+### 관리자 API
+- GET /api/v1/admin/products (검색, 필터, 페이징)
+- 권한: ROLE_ADMIN만 접근 가능
+
+## 주의사항
+
+- `.env` 파일은 절대 Git에 커밋하지 마세요 (전달받은 액세스 키 공개하지 마세요)
 ## 테스트 계정 (QA/프론트용)
 
 | 이메일         | 비밀번호   |
@@ -28,6 +41,11 @@ z-data.sql 목업으로 들어가 있으며, 평문 비밀번호로 로그인할
 
 - **DB**: `MYSQL_*` (호스트, 포트, DB명, 사용자, 비밀번호)
 - **JWT**: `JWT_SECRET`, `JWT_ACCESS_EXPIRE_MINUTES` (기본 30), `JWT_REFRESH_EXPIRE_DAYS` (기본 7)
+- **AWS S3**:
+`AWS_S3_ACCESS_KEY`: AWS 액세스 키 ID, 
+`AWS_S3_SECRET_KEY`: AWS 비밀 액세스 키,
+`AWS_S3_REGION`: S3 리전 (예: ap-southeast-2), 
+`AWS_S3_BUCKET`: S3 버킷 이름
 
 ## API 문서
 
@@ -41,11 +59,13 @@ z-data.sql 목업으로 들어가 있으며, 평문 비밀번호로 로그인할
 
 ## 기존 DB에 role 컬럼이 없는 경우
 
-이미 Week 1 스키마로 DB를 만든 경우, `users` 테이블에 `role` 컬럼을 추가해야 합니다.
+- 이미 Week 1 스키마로 DB를 만든 경우, `users` 테이블에 `role` 컬럼을 추가해야 합니다.
+- Week 3 이후에는 'products' 테이블에 'image_url' 컬럼까지 추가해야 합니다.
 
 ```sql
 ALTER TABLE users ADD COLUMN role VARCHAR(50) NOT NULL DEFAULT 'USER' AFTER address;
 ALTER TABLE users ADD INDEX idx_role (role);
+ALTER TABLE products ADD COLUMN image_url TEXT NULL;
 ```
 
 이후 앱을 재기동하면 JWT·역할 기반 API가 정상 동작합니다.

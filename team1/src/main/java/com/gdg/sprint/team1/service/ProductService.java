@@ -104,7 +104,8 @@ public class ProductService {
             p.getDescription(),
             p.getPrice(),
             p.getStock(),
-            p.getProductStatus(),
+            p.getProductStatus().name(),
+            p.getImageUrl(),
             p.getCreatedAt(),
             p.getUpdatedAt()
         );
@@ -117,7 +118,8 @@ public class ProductService {
             p.getDescription(),
             p.getPrice(),
             p.getStock(),
-            p.getProductStatus(),
+            p.getProductStatus().name(),
+            p.getImageUrl(),
             p.getCreatedAt(),
             p.getUpdatedAt()
         );
@@ -130,13 +132,12 @@ public class ProductService {
             default -> "createdAt";
         };
     }
-
     @Transactional(readOnly = true)
     public ProductListResponse getAdminProductList(
-            Integer page,
-            Integer limit,
-            String status,
-            String search
+        Integer page,
+        Integer limit,
+        String status,
+        String search
     ) {
         return getProductList(page, limit, status, search, null, null, null, null, null);
     }
