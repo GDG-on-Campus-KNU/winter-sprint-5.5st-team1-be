@@ -10,6 +10,7 @@ public record ProductListDto(
     BigDecimal price,
     Integer stock,
     String productStatus,
+    String imageUrl,
     Instant createdAt,
     Instant updatedAt
 ) {}
