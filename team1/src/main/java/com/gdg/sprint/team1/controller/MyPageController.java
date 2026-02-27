@@ -2,6 +2,7 @@ package com.gdg.sprint.team1.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
@@ -10,10 +11,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +24,7 @@ import com.gdg.sprint.team1.common.ApiResponse;
 import com.gdg.sprint.team1.controller.api.MyPageApi;
 import com.gdg.sprint.team1.dto.auth.UserMeResponse;
 import com.gdg.sprint.team1.dto.my.MyCouponResponse;
+import com.gdg.sprint.team1.dto.my.UpdateMyInfoRequest;
 import com.gdg.sprint.team1.dto.order.OrderDetailResponse;
 import com.gdg.sprint.team1.dto.order.OrderResponse;
 import com.gdg.sprint.team1.security.CurrentUser;
@@ -28,6 +32,7 @@ import com.gdg.sprint.team1.security.UserContextHolder;
 import com.gdg.sprint.team1.service.OrderService;
 import com.gdg.sprint.team1.service.UserCouponService;
 import com.gdg.sprint.team1.service.UserService;
+import com.gdg.sprint.team1.entity.User;
 
 @RestController
 @RequestMapping("/api/v1/my")
@@ -82,5 +87,15 @@ public class MyPageController implements MyPageApi {
     ) {
         OrderDetailResponse data = orderService.getOrderDetail(user.userId(), orderId);
         return ResponseEntity.ok(ApiResponse.success(data, "주문 상세 조회 성공"));
+    }
+
+    @Override
+    @PatchMapping("/info")
+    public ResponseEntity<ApiResponse<UserMeResponse>> updateMyInfo(
+            @CurrentUser UserContextHolder.UserContext user,
+            @Valid @RequestBody UpdateMyInfoRequest request
+    ) {
+        User updated = userService.updateMyInfo(user.userId(), request);
+        return ResponseEntity.ok(ApiResponse.success(UserMeResponse.from(updated), "내 정보 수정 성공"));
     }
 }

@@ -94,6 +94,28 @@ public class User {
     public UserRole getRole() { return role; }
     public void setRole(UserRole role) { this.role = role; }
 
+    public void updateProfile(String name, String phone, String address) {
+        if (name != null) {
+            String trimmedName = name.trim();
+            if (trimmedName.isEmpty()) {
+                throw new IllegalArgumentException("이름은 공백만 입력할 수 없습니다.");
+            }
+            this.name = trimmedName;
+        }
+        if (phone != null) {
+            String trimmedPhone = phone.trim();
+            if (!trimmedPhone.isEmpty()) {
+                this.phone = trimmedPhone;
+            }
+        }
+        if (address != null) {
+            String trimmedAddress = address.trim();
+            if (!trimmedAddress.isEmpty()) {
+                this.address = trimmedAddress;
+            }
+        }
+    }
+
     public enum UserRole {
         USER,
         ADMIN
