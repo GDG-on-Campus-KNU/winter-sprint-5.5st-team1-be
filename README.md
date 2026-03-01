@@ -46,6 +46,7 @@ z-data.sql 목업으로 들어가 있으며, 평문 비밀번호로 로그인할
 `AWS_S3_SECRET_KEY`: AWS 비밀 액세스 키,
 `AWS_S3_REGION`: S3 리전 (예: ap-southeast-2), 
 `AWS_S3_BUCKET`: S3 버킷 이름
+- **CORS** (프론트 배포 시): `CORS_ALLOWED_ORIGINS`에 프론트 URL을 넣으면 해당 origin에서 API 호출 허용 (예: `https://your-app.vercel.app`). 로컬(localhost)은 기본 허용.
 
 ## API 문서
 
