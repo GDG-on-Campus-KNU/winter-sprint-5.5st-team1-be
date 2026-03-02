@@ -44,8 +44,20 @@ services:
       AWS_S3_BUCKET: ${AWS_S3_BUCKET:-gdg-sprint-team1-images}
       # CORS: 프론트 배포 URL (쉼표 구분, 예: https://your-app.vercel.app)
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+    expose:
+      - "8080"
+
+  nginx:
+    image: nginx:alpine
+    container_name: team1-nginx
+    depends_on:
+      - app
     ports:
-      - "8080:8080"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
 
 volumes:
   mysql-data:

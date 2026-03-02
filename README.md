@@ -50,13 +50,26 @@ z-data.sql 목업으로 들어가 있으며, 평문 비밀번호로 로그인할
 
 ## API 문서
 
-- **Swagger UI**: `http://localhost:8080/swagger-ui.html` (실행 후)
+- **Swagger UI**: 앱 직접 실행 시 `http://localhost:8080/swagger-ui.html`, Docker(nginx 사용) 시 `http://localhost/swagger-ui.html` 또는 `https://localhost/swagger-ui.html` (self-signed 인증서 사용 시 브라우저에서 경고 후 진행 가능).
 - 인증이 필요한 API는 Swagger 상단 **Authorize**에서 Bearer 토큰을 입력한 뒤 호출할 수 있습니다.
 
 ## 실행
 
 - **Docker**: `docker-compose up -d` (MySQL 먼저 기동·헬스체크 후 앱이 연결되므로, 첫 기동 시 MySQL 준비까지 15~30초 정도 걸릴 수 있습니다.)
 - **로컬**: MySQL이 먼저 떠 있어야 합니다. `./gradlew :team1:bootRun` 또는 IDE에서 `Team1Application` 실행. DB는 `localhost:3306`(또는 `.env`의 `MYSQL_HOST`/`MYSQL_PORT`)로 접속합니다.
+
+## 리버스 프록시 및 HTTPS
+
+프론트가 **HTTPS**로 서비스되므로, 브라우저에서 API를 호출할 때도 **HTTPS**로 접근해야 mixed content 오류를 피할 수 있습니다. 이 레포에는 nginx 리버스 프록시가 포함되어 있어, **80(HTTP)** 과 **443(HTTPS)** 로 요청을 받아 앱(8080)으로 전달합니다.
+
+- **첫 배포 전**: HTTPS용 인증서가 필요합니다. 스테이징/개발용 self-signed 인증서 생성:
+  ```bash
+  chmod +x nginx/certs/generate-selfsigned.sh
+  ./nginx/certs/generate-selfsigned.sh
+  ```
+  (`nginx/certs/cert.pem`, `key.pem`이 생성되며, Git에는 커밋되지 않습니다.)
+- **Docker 실행 후**: API는 `http://호스트:80` 또는 `https://호스트:443`으로 접근합니다. 프론트엔드에서는 배포 서버 주소로 `https://배포서버`를 사용하면 됩니다.
+- **운영(도메인 보유 시)**: Let's Encrypt 등으로 발급한 인증서를 `nginx/certs/`에 `cert.pem`, `key.pem` 이름으로 두면 nginx가 자동으로 사용합니다.
 
 ## 기존 DB에 role 컬럼이 없는 경우
 
