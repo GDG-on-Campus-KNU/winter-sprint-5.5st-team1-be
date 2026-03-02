@@ -50,7 +50,7 @@ z-data.sql 목업으로 들어가 있으며, 평문 비밀번호로 로그인할
 
 ## API 문서
 
-- **Swagger UI**: 앱 직접 실행 시 `http://localhost:8080/swagger-ui.html`, Docker(nginx 사용) 시 `http://localhost/swagger-ui.html` 또는 `https://localhost/swagger-ui.html` (self-signed 인증서 사용 시 브라우저에서 경고 후 진행 가능).
+- **Swagger UI**: 앱 직접 실행 시 `http://localhost:8080/swagger-ui.html`. Docker 사용 시 **기존처럼** `http://localhost:8080/swagger-ui.html` (app 포트 그대로 노출), 또는 nginx 경유 `http://localhost/swagger-ui.html` / `https://localhost/swagger-ui.html` (self-signed 사용 시 브라우저 경고 후 진행 가능).
 - 인증이 필요한 API는 Swagger 상단 **Authorize**에서 Bearer 토큰을 입력한 뒤 호출할 수 있습니다.
 
 ## 실행
@@ -68,7 +68,7 @@ z-data.sql 목업으로 들어가 있으며, 평문 비밀번호로 로그인할
   ./nginx/certs/generate-selfsigned.sh
   ```
   (`nginx/certs/cert.pem`, `key.pem`이 생성되며, Git에는 커밋되지 않습니다.)
-- **Docker 실행 후**: API는 `http://호스트:80` 또는 `https://호스트:443`으로 접근합니다. 프론트엔드에서는 배포 서버 주소로 `https://배포서버`를 사용하면 됩니다.
+- **Docker 실행 후**: API는 `http://호스트:80` 또는 `https://호스트:443`(nginx 경유), 또는 **기존처럼** `http://호스트:8080`(앱 직접, Swagger 등)으로 접근할 수 있습니다. 프론트엔드 연동 시에는 `https://배포서버`를 사용하면 됩니다.
 - **운영(도메인 보유 시)**: Let's Encrypt 등으로 발급한 인증서를 `nginx/certs/`에 `cert.pem`, `key.pem` 이름으로 두면 nginx가 자동으로 사용합니다.
 
 ## 기존 DB에 role 컬럼이 없는 경우
