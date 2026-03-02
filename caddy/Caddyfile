@@ -2,15 +2,9 @@
 	# 필요 시 여기에서 글로벌 옵션(e.g. email) 설정 가능
 }
 
-:80 {
-	# HTTP 요청을 그대로 백엔드로 프록시
-	reverse_proxy app:8080
-}
-
-:443 {
-	# 스테이징/개발용 내부 CA 인증서 (브라우저에서 경고 표시됨)
-	tls internal
-
+winter-sprint.kro.kr {
+	# Caddy가 winter-sprint.kro.kr 도메인에 대해
+	# 자동으로 HTTPS(ACME/Let's Encrypt) 인증서를 발급·갱신합니다.
 	reverse_proxy app:8080
 }
 
