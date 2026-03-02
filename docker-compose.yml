@@ -49,17 +49,16 @@ services:
     expose:
       - "8080"
 
-  nginx:
-    image: nginx:alpine
-    container_name: team1-nginx
+  caddy:
+    image: caddy:2-alpine
+    container_name: team1-caddy
     depends_on:
       - app
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
 
 volumes:
   mysql-data:

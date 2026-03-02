@@ -60,16 +60,16 @@ z-data.sql 목업으로 들어가 있으며, 평문 비밀번호로 로그인할
 
 ## 리버스 프록시 및 HTTPS
 
-프론트가 **HTTPS**로 서비스되므로, 브라우저에서 API를 호출할 때도 **HTTPS**로 접근해야 mixed content 오류를 피할 수 있습니다. 이 레포에는 nginx 리버스 프록시가 포함되어 있어, **80(HTTP)** 과 **443(HTTPS)** 로 요청을 받아 앱(8080)으로 전달합니다.
+프론트가 **HTTPS**로 서비스되므로, 브라우저에서 API를 호출할 때도 **HTTPS**로 접근해야 mixed content 오류를 피할 수 있습니다. 이 레포에서는 **Caddy 2**를 리버스 프록시로 사용하여, **80(HTTP)** 과 **443(HTTPS)** 로 들어온 요청을 앱(8080)으로 전달합니다.
 
-- **첫 배포 전**: HTTPS용 인증서가 필요합니다. 스테이징/개발용 self-signed 인증서 생성:
-  ```bash
-  chmod +x nginx/certs/generate-selfsigned.sh
-  ./nginx/certs/generate-selfsigned.sh
-  ```
-  (`nginx/certs/cert.pem`, `key.pem`이 생성되며, Git에는 커밋되지 않습니다.)
-- **Docker 실행 후**: API는 `http://호스트:80` 또는 `https://호스트:443`(nginx 경유), 또는 **기존처럼** `http://호스트:8080`(앱 직접, Swagger 등)으로 접근할 수 있습니다. 프론트엔드 연동 시에는 `https://배포서버`를 사용하면 됩니다.
-- **운영(도메인 보유 시)**: Let's Encrypt 등으로 발급한 인증서를 `nginx/certs/`에 `cert.pem`, `key.pem` 이름으로 두면 nginx가 자동으로 사용합니다.
+- **Docker 실행 후**:
+  - API 직접 접근: `http://호스트:8080` (Spring Boot 컨테이너 직접)
+  - Caddy 경유: `http://호스트` 또는 `https://호스트`
+    - `caddy/Caddyfile` 기본 설정은 `:80`, `:443` 에서 `app:8080`으로 `reverse_proxy` 합니다.
+    - 443 포트는 `tls internal`(내부 CA)로 동작하므로, **브라우저에서 첫 접속 시 보안 경고가 뜨는 것이 정상**입니다(스테이징/개발용).
+- **운영(실제 도메인 보유 시)**:
+  - `caddy/Caddyfile`의 `:80`, `:443` 대신 `api.your-domain.com` 같은 실제 도메인으로 변경하고,
+  - Caddy의 자동 HTTPS(ACME)를 사용하면 별도 certbot 없이도 Let’s Encrypt 인증서를 자동 발급·갱신할 수 있습니다.
 
 ## 기존 DB에 role 컬럼이 없는 경우
 
