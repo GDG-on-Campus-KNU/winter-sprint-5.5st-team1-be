@@ -23,6 +23,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1'
+	implementation 'org.springframework.boot:spring-boot-starter-json'
+	// java.time.Instant 등 직렬화 지원
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 	// BCrypt 비밀번호 해싱 (Spring Security 전체가 아닌 crypto만)
 	implementation 'org.springframework.security:spring-security-crypto:6.4.2'
 	// JWT

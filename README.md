@@ -46,16 +46,30 @@ z-data.sql 목업으로 들어가 있으며, 평문 비밀번호로 로그인할
 `AWS_S3_SECRET_KEY`: AWS 비밀 액세스 키,
 `AWS_S3_REGION`: S3 리전 (예: ap-southeast-2), 
 `AWS_S3_BUCKET`: S3 버킷 이름
+- **CORS** (프론트 배포 시): `CORS_ALLOWED_ORIGINS`에 프론트 URL을 넣으면 해당 origin에서 API 호출 허용 (예: `https://your-app.vercel.app`). 로컬(localhost)은 기본 허용.
 
 ## API 문서
 
-- **Swagger UI**: `http://localhost:8080/swagger-ui.html` (실행 후)
+- **Swagger UI**: 앱 직접 실행 시 `http://localhost:8080/swagger-ui.html`. Docker 사용 시 **기존처럼** `http://localhost:8080/swagger-ui.html` (app 포트 그대로 노출), 또는 nginx 경유 `http://localhost/swagger-ui.html` / `https://localhost/swagger-ui.html` (self-signed 사용 시 브라우저 경고 후 진행 가능).
 - 인증이 필요한 API는 Swagger 상단 **Authorize**에서 Bearer 토큰을 입력한 뒤 호출할 수 있습니다.
 
 ## 실행
 
 - **Docker**: `docker-compose up -d` (MySQL 먼저 기동·헬스체크 후 앱이 연결되므로, 첫 기동 시 MySQL 준비까지 15~30초 정도 걸릴 수 있습니다.)
 - **로컬**: MySQL이 먼저 떠 있어야 합니다. `./gradlew :team1:bootRun` 또는 IDE에서 `Team1Application` 실행. DB는 `localhost:3306`(또는 `.env`의 `MYSQL_HOST`/`MYSQL_PORT`)로 접속합니다.
+
+## 리버스 프록시 및 HTTPS
+
+프론트가 **HTTPS**로 서비스되므로, 브라우저에서 API를 호출할 때도 **HTTPS**로 접근해야 mixed content 오류를 피할 수 있습니다. 이 레포에서는 **Caddy 2**를 리버스 프록시로 사용하여, **80(HTTP)** 과 **443(HTTPS)** 로 들어온 요청을 앱(8080)으로 전달합니다.
+
+- **Docker 실행 후**:
+  - API 직접 접근: `http://호스트:8080` (Spring Boot 컨테이너 직접)
+  - Caddy 경유: `http://호스트` 또는 `https://호스트`
+    - `caddy/Caddyfile` 기본 설정은 `:80`, `:443` 에서 `app:8080`으로 `reverse_proxy` 합니다.
+    - 443 포트는 `tls internal`(내부 CA)로 동작하므로, **브라우저에서 첫 접속 시 보안 경고가 뜨는 것이 정상**입니다(스테이징/개발용).
+- **운영(실제 도메인 보유 시)**:
+  - `caddy/Caddyfile`의 `:80`, `:443` 대신 `api.your-domain.com` 같은 실제 도메인으로 변경하고,
+  - Caddy의 자동 HTTPS(ACME)를 사용하면 별도 certbot 없이도 Let’s Encrypt 인증서를 자동 발급·갱신할 수 있습니다.
 
 ## 기존 DB에 role 컬럼이 없는 경우
 
