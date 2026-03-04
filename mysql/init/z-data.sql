@@ -28,18 +28,24 @@ VALUES
     (11, '마스크 5매입',      '일회용 마스크 5매',                               1500,  200,'ACTIVE'),
     (12, '손소독제 50ml',     '휴대용 손소독제 50ml',                            2000,  150,'ACTIVE');
 
--- 쿠폰 2개 (정률, 정액)
+-- 쿠폰 (정률 4종 + 정액 1종)
 INSERT INTO coupons (id, name, min_order_price, coupon_type, discount_value, description, coupon_status, valid_days)
 VALUES
     (1, '10% 할인 쿠폰', 10000, 'PERCENTAGE', 10.00, '주문 금액의 10% 할인', 'ACTIVE', 30),
-    (2, '2,000원 할인 쿠폰', 8000, 'FIXED', 2000.00, '주문 금액에서 2,000원 할인', 'ACTIVE', 30);
+    (2, '2,000원 할인 쿠폰', 8000, 'FIXED', 2000.00, '주문 금액에서 2,000원 할인', 'ACTIVE', 30),
+    (3, '5% 할인 쿠폰', 5000, 'PERCENTAGE', 5.00, '주문 금액의 5% 할인', 'ACTIVE', 30),
+    (4, '15% 할인 쿠폰', 15000, 'PERCENTAGE', 15.00, '주문 금액의 15% 할인', 'ACTIVE', 30),
+    (5, '20% 할인 쿠폰', 20000, 'PERCENTAGE', 20.00, '주문 금액의 20% 할인', 'ACTIVE', 30);
 
--- 사용자 보유 쿠폰
+-- 사용자 보유 쿠폰 (dev2에게 퍼센트 쿠폰 3개: 10%, 5%, 15%)
 INSERT INTO user_coupons (id, coupon_id, user_id, issued_at, used_at, expired_at)
 VALUES
     (1, 1, 1, NOW() - INTERVAL 5 DAY,  NULL,                      NOW() + INTERVAL 25 DAY),
     (2, 2, 1, NOW() - INTERVAL 10 DAY, NOW() - INTERVAL 1 DAY,   NOW() + INTERVAL 20 DAY),
-    (3, 2, 2, NOW() - INTERVAL 3 DAY,  NULL,                      NOW() + INTERVAL 27 DAY);
+    (3, 2, 2, NOW() - INTERVAL 3 DAY,  NULL,                      NOW() + INTERVAL 27 DAY),
+    (4, 1, 2, NOW() - INTERVAL 2 DAY,  NULL,                      NOW() + INTERVAL 28 DAY),
+    (5, 3, 2, NOW() - INTERVAL 1 DAY,  NULL,                      NOW() + INTERVAL 29 DAY),
+    (6, 4, 2, NOW(),                   NULL,                      NOW() + INTERVAL 30 DAY);
 
 -- 장바구니 예시 데이터
 INSERT INTO cart_items (product_id, user_id, quantity, created_at, updated_at)
