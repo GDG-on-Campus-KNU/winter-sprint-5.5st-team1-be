@@ -70,7 +70,7 @@ public class CartService {
             Integer quantity = item.getQuantity();
             BigDecimal subtotal = productPrice.multiply(BigDecimal.valueOf(quantity));
             boolean isAvailable = product != null
-                && "ACTIVE".equals(product.getProductStatus())
+                && "ACTIVE".equals(product.getProductStatus().name())
                 && product.getStock() != null
                 && product.getStock() >= quantity;
 
@@ -78,7 +78,7 @@ public class CartService {
                 productId,
                 product != null ? product.getName() : null,
                 productPrice,
-                product != null ? product.getProductStatus() : null,
+                product != null ? product.getProductStatus().name() : null,
                 quantity,
                 subtotal,
                 isAvailable,

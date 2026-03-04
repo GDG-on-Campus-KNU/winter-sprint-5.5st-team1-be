@@ -12,28 +12,36 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import lombok.Getter;
+
 @Entity
 @Table(name = "user_coupons")
 public class UserCoupon {
 
+    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Getter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coupon_id", nullable = false)
     private Coupon coupon;
 
+    @Getter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Getter
     @Column(name = "issued_at", nullable = false)
     private LocalDateTime issuedAt;
 
+    @Getter
     @Column(name = "used_at")
     private LocalDateTime usedAt;
 
+    @Getter
     @Column(name = "expired_at", nullable = false)
     private LocalDateTime expiredAt;
 
@@ -51,17 +59,4 @@ public class UserCoupon {
         LocalDateTime now = LocalDateTime.now();
         return usedAt == null && expiredAt.isAfter(now);
     }
-
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
-    public Coupon getCoupon() { return coupon; }
-    public void setCoupon(Coupon coupon) { this.coupon = coupon; }
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-    public LocalDateTime getIssuedAt() { return issuedAt; }
-    public void setIssuedAt(LocalDateTime issuedAt) { this.issuedAt = issuedAt; }
-    public LocalDateTime getUsedAt() { return usedAt; }
-    public void setUsedAt(LocalDateTime usedAt) { this.usedAt = usedAt; }
-    public LocalDateTime getExpiredAt() { return expiredAt; }
-    public void setExpiredAt(LocalDateTime expiredAt) { this.expiredAt = expiredAt; }
 }

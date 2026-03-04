@@ -1,5 +1,6 @@
 package com.gdg.sprint.team1.repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -26,4 +27,19 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
         "orderItems.product"
     })
     Optional<Order> findWithDetailsById(Integer orderId);
+
+    @EntityGraph(attributePaths = {"orderItems"})
+    Page<Order> findAllByUserIdAndCreatedAtGreaterThanEqual(
+            Integer userId,
+            LocalDateTime fromDate,
+            Pageable pageable
+    );
+
+    @EntityGraph(attributePaths = {"orderItems"})
+    Page<Order> findAllByUserIdAndOrderStatusAndCreatedAtGreaterThanEqual(
+            Integer userId,
+            OrderStatus orderStatus,
+            LocalDateTime fromDate,
+            Pageable pageable
+    );
 }

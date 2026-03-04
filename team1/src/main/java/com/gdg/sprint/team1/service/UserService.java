@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
+import com.gdg.sprint.team1.dto.my.UpdateMyInfoRequest;
 import com.gdg.sprint.team1.entity.User;
 import com.gdg.sprint.team1.exception.UserNotFoundException;
 import com.gdg.sprint.team1.repository.UserRepository;
@@ -36,5 +37,16 @@ public class UserService {
     @Transactional
     public User save(User user) {
         return userRepository.save(user);
+    }
+
+    @Transactional
+    public User updateMyInfo(Integer userId, UpdateMyInfoRequest request) {
+        if (request == null || !request.hasAnyField()) {
+            throw new IllegalArgumentException("수정할 필드가 없습니다.");
+        }
+
+        User user = findById(userId);
+        user.updateProfile(request.name(), request.phone(), request.address());
+        return user;
     }
 }

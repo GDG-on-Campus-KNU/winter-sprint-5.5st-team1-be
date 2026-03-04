@@ -68,6 +68,8 @@ public class UserCouponService {
             stream = stream.filter(UserCoupon::isUsable);
         } else if ("USED".equalsIgnoreCase(status)) {
             stream = stream.filter(uc -> uc.getUsedAt() != null);
+        } else if ("EXPIRED".equalsIgnoreCase(status)) {
+            stream = stream.filter(uc -> uc.getUsedAt() == null && uc.getExpiredAt() != null && uc.getExpiredAt().isBefore(java.time.LocalDateTime.now()));
         }
         return stream.toList();
     }

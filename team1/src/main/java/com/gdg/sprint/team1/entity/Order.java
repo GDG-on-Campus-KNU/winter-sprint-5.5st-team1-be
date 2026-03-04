@@ -21,62 +21,81 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import lombok.Getter;
+
 @Entity
 @Table(name = "orders")
 public class Order {
 
+    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Getter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Getter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_coupon_id")
     private UserCoupon userCoupon;
 
+    @Getter
     @Column(name = "total_product_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalProductPrice;
 
+    @Getter
     @Column(name = "discount_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
+    @Getter
     @Column(name = "delivery_fee", nullable = false, precision = 10, scale = 2)
     private BigDecimal deliveryFee = BigDecimal.ZERO;
 
+    @Getter
     @Column(name = "final_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal finalPrice;
 
+    @Getter
     @Column(name = "recipient_name", nullable = false, length = 100)
     private String recipientName;
 
+    @Getter
     @Column(name = "recipient_phone", nullable = false, length = 20)
     private String recipientPhone;
 
+    @Getter
     @Column(name = "delivery_address", nullable = false, columnDefinition = "TEXT")
     private String deliveryAddress;
 
+    @Getter
     @Column(name = "delivery_detail_address")
     private String deliveryDetailAddress;
 
+    @Getter
     @Column(name = "delivery_message", length = 500)
     private String deliveryMessage;
 
+    @Getter
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status", nullable = false, length = 50)
     private OrderStatus orderStatus = OrderStatus.PENDING;
 
+    @Getter
     @Column(name = "cancel_reason", length = 500)
     private String cancelReason;
 
+    @Getter
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
+    @Getter
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Getter
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
@@ -136,37 +155,4 @@ public class Order {
         orderItems.add(orderItem);
         orderItem.setOrder(this);
     }
-
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-    public UserCoupon getUserCoupon() { return userCoupon; }
-    public void setUserCoupon(UserCoupon userCoupon) { this.userCoupon = userCoupon; }
-    public BigDecimal getTotalProductPrice() { return totalProductPrice; }
-    public void setTotalProductPrice(BigDecimal totalProductPrice) { this.totalProductPrice = totalProductPrice; }
-    public BigDecimal getDiscountAmount() { return discountAmount; }
-    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
-    public BigDecimal getDeliveryFee() { return deliveryFee; }
-    public void setDeliveryFee(BigDecimal deliveryFee) { this.deliveryFee = deliveryFee; }
-    public BigDecimal getFinalPrice() { return finalPrice; }
-    public void setFinalPrice(BigDecimal finalPrice) { this.finalPrice = finalPrice; }
-    public String getRecipientName() { return recipientName; }
-    public void setRecipientName(String recipientName) { this.recipientName = recipientName; }
-    public String getRecipientPhone() { return recipientPhone; }
-    public void setRecipientPhone(String recipientPhone) { this.recipientPhone = recipientPhone; }
-    public String getDeliveryAddress() { return deliveryAddress; }
-    public void setDeliveryAddress(String deliveryAddress) { this.deliveryAddress = deliveryAddress; }
-    public String getDeliveryDetailAddress() { return deliveryDetailAddress; }
-    public void setDeliveryDetailAddress(String deliveryDetailAddress) { this.deliveryDetailAddress = deliveryDetailAddress; }
-    public String getDeliveryMessage() { return deliveryMessage; }
-    public void setDeliveryMessage(String deliveryMessage) { this.deliveryMessage = deliveryMessage; }
-    public OrderStatus getOrderStatus() { return orderStatus; }
-    public void setOrderStatus(OrderStatus orderStatus) { this.orderStatus = orderStatus; }
-    public String getCancelReason() { return cancelReason; }
-    public void setCancelReason(String cancelReason) { this.cancelReason = cancelReason; }
-    public List<OrderItem> getOrderItems() { return orderItems; }
-    public void setOrderItems(List<OrderItem> orderItems) { this.orderItems = orderItems; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
